@@ -590,7 +590,7 @@ do_infer_all_barcodes <- function(seq_tab,
         } else {
           alignment_prefix <- NULL
         }
-        tmp_dir <- tmp_dir %||% get_tmp_dir()
+        tmp_dir <- get_create_tmp_dir(tmp_dir)
         d <- infer_barcode(
           fq,
           dada_err,
@@ -837,7 +837,7 @@ do_assign_taxonomy <- function(seq_tab,
   unique_map <- setNames(names(unique_seqs), unique_seqs)
 
   # assign using SINTAX
-  tmp_dir <- tmp_dir %||% get_tmp_dir()
+  tmp_dir <- get_create_tmp_dir(tmp_dir)
   seqs_tmp <- tempfile('seqs', tmpdir = tmp_dir, fileext = '.fasta')
   write_dna(unique_seqs, seqs_tmp)
   seq_lineages <- assign_taxonomy_sintax(

@@ -131,7 +131,7 @@ infer_barcode <- function(fq,
   # paths/global options
   samtools <- get_program('samtools')
   minimap2 <- get_program('minimap2')
-  tmp_dir <- tmp_dir %||% get_tmp_dir()
+  tmp_dir <- get_create_tmp_dir(tmp_dir)
 
   # temporary directory
   tmp <- tempfile('infer_barcode_', tmpdir = tmp_dir)
@@ -493,7 +493,7 @@ compare_seqs <- function(d,
                          known_seq = NULL) {
   samtools <- get_program('samtools')
   minimap2 <- get_program('minimap2')
-  tmp_dir <- tmp_dir %||% get_tmp_dir()
+  tmp_dir <- get_create_tmp_dir(tmp_dir)
   known_seq <- known_seq %||% NA
   stopifnot(length(known_seq) == 1)
   d$known_seq_diffs <- NA_integer_

@@ -48,16 +48,19 @@ get_opt <- function(o) {
   path
 }
 
-get_tmp_dir <- function() {
-  tmp_dir <- get_opt('tmp_dir')
+get_create_tmp_dir <- function(tmp_dir = NULL) {
   if (is.null(tmp_dir)) {
-    tmp_dir <- Sys.getenv('XDG_RUNTIME_DIR')
-    if (!nzchar(tmp_dir)) {
-      tmp_dir <- tempdir()
-    } else {
-      tmp_dir <- file.path(tmp_dir, 'DadaNanoBC')
+    tmp_dir <- get_opt('tmp_dir')
+    if (is.null(tmp_dir)) {
+      tmp_dir <- Sys.getenv('XDG_RUNTIME_DIR')
+      if (!nzchar(tmp_dir)) {
+        tmp_dir <- tempdir()
+      } else {
+        tmp_dir <- file.path(tmp_dir, 'DadaNanoBC')
+      }
+      .env$opts$tmp_dir <- tmp_dir
     }
-    .env$opts$tmp_dir <- tmp_dir
   }
+  dir.create(tmp_dir, FALSE, TRUE)
   tmp_dir
 }
