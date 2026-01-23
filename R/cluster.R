@@ -54,7 +54,7 @@
 #' @param homopoly_fix_min_ident Minimum number of identical sequences required to
 #'    attempt adjusting ambiguous homopolymer sequences in the consensus.
 #'    The homopolymer run length of the most frequent sequence is chosen.
-#' @param min_homopoly_len Minimum length a homopolymer region needs to have in order
+#' @param homopoly_fix_minlen Minimum length a homopolymer region needs to have in order
 #'    to attempt "fixing" an ambiguous consensus in that region
 #'    (see also `homopoly_fix_min_ident`)
 #' @param fixed_cluster_threshold Similarity threshold for grouping sequence variants
@@ -119,7 +119,7 @@ infer_barcode <- function(fq,
                           consensus_threshold = 0.65,
                           consensus_by_qual = TRUE,
                           homopoly_fix_min_ident = 4,
-                          min_homopoly_len = 6,
+                          homopoly_fix_minlen = 6,
                           fixed_cluster_threshold = 0.97,
                           taxa_cluster_threshold = fixed_cluster_threshold,
                           cluster_single_linkage = TRUE,
@@ -229,7 +229,7 @@ infer_barcode <- function(fq,
         consensus_threshold = consensus_threshold,
         consensus_by_qual = consensus_by_qual,
         homopoly_fix = d$max_identical >= dada_min_identical,
-        min_homopoly_len = min_homopoly_len,
+        homopoly_fix_minlen = homopoly_fix_minlen,
         fast = TRUE,
         cores = cores,
         minimap2 = minimap2,
@@ -255,7 +255,7 @@ infer_barcode <- function(fq,
           max_ratio = max_split_ratio,
           consensus_threshold = consensus_threshold,
           consensus_by_qual = consensus_by_qual,
-          min_homopoly_len = min_homopoly_len,
+          homopoly_fix_minlen = homopoly_fix_minlen,
           fast = TRUE,
           cores = cores,
           minimap2 = minimap2,
@@ -384,7 +384,7 @@ infer_barcode <- function(fq,
         consensus_threshold = consensus_threshold,
         consensus_by_qual = consensus_by_qual,
         homopoly_fix = d.sel$max_identical[remap_cons] >= dada_min_identical,
-        min_homopoly_len = min_homopoly_len,
+        homopoly_fix_minlen = homopoly_fix_minlen,
         fast = !all(remap_cons),
         cores = cores,
         minimap2 = minimap2,
@@ -1011,7 +1011,7 @@ ambig_consensus <- function(seqs,
                             consensus_by_qual = TRUE,
                             fast = FALSE,
                             homopoly_fix = FALSE,
-                            min_homopoly_len = 6,
+                            homopoly_fix_minlen = 6,
                             cores = 1,
                             minimap2 = 'minimap2',
                             samtools = 'samtools') {
@@ -1070,7 +1070,7 @@ ambig_consensus <- function(seqs,
     if (any(homopoly_fix)) {
       res <- fix_homopolymers(out$consensus[homopoly_fix],
                               ref_seq[homopoly_fix],
-                              min_homopoly_len = min_homopoly_len)
+                              homopoly_minlen = homopoly_fix_minlen)
       cons_ <- out$consensus
       out[homopoly_fix, c('consensus', 'homopolymer_adjustments')] <- res[, c('consensus', 'n_adjusted')]
       adjusted <- out$homopolymer_adjustments > 0
@@ -1103,7 +1103,7 @@ ambig_consensus <- function(seqs,
 #' @param cons_seq the consensus
 #' @param ref_seq the reference sequence (there should be some confidence
 #' that it is correct)
-#' @param min_homopoly_len minimum homopolymer length to check and fix
+#' @param homopoly_minlen minimum homopolymer length to check and fix
 #'
 #' @returns a data frame with these columns:
 #' - *consensus*: the "fixed" consensus sequence
@@ -1131,7 +1131,7 @@ ambig_consensus <- function(seqs,
 #' 6. Go back to 2., searching for the next N
 #' 7. Remove all gaps from the consensus and return this sequence
 #'
-fix_homopolymers <- function(cons_seq, ref_seq, min_homopoly_len = 6) {
+fix_homopolymers <- function(cons_seq, ref_seq, homopoly_minlen = 6) {
   # function for finding homopolymer runs at a specific position
   find_run <- function(x, values, at) {
     r <- rle(values)
@@ -1179,7 +1179,7 @@ fix_homopolymers <- function(cons_seq, ref_seq, min_homopoly_len = 6) {
       # as there may be gaps, this is not the precise homopolymer length
       # but we proceed with this candidate
       check_length <- rng[2] - rng[1] + 1
-      if (check_length >= min_homopoly_len) {
+      if (check_length >= homopoly_minlen) {
         stopifnot(unique(cons[rng[1]:rng[2]]) %in% c(n_ascii, sel_base_ascii, gap_ascii))
         stopifnot(all(cons_adj[rng[1]:rng[2]] == sel_base_ascii))
         # Find homopolymer range of given base in the *reference*
@@ -1190,7 +1190,7 @@ fix_homopolymers <- function(cons_seq, ref_seq, min_homopoly_len = 6) {
         n_sel_base <- sum(ref_sub == sel_base_ascii)
         # the reference sequence must only have the given base or gaps at this location
         is_pure <- all(ref_sub == sel_base_ascii | ref_sub == gap_ascii)
-        if (is_pure && n_sel_base >= min_homopoly_len) {
+        if (is_pure && n_sel_base >= homopoly_minlen) {
           stopifnot(cons[rng[1]:rng[2]] %in% c(n_ascii, gap_ascii, sel_base_ascii))
           stopifnot(length(cons[rng[1]:rng[2]]) == length(ref_sub))
           cons[rng[1]:rng[2]] <- ref_sub

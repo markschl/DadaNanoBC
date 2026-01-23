@@ -4,7 +4,7 @@
 \alias{fix_homopolymers}
 \title{Attempt at "fixing" the consensus sequence in a homopolymer region}
 \usage{
-fix_homopolymers(cons_seq, ref_seq, min_homopoly_len = 6)
+fix_homopolymers(cons_seq, ref_seq, homopoly_minlen = 6)
 }
 \arguments{
 \item{cons_seq}{the consensus}
@@ -12,7 +12,7 @@ fix_homopolymers(cons_seq, ref_seq, min_homopoly_len = 6)
 \item{ref_seq}{the reference sequence (there should be some confidence
 that it is correct)}
 
-\item{min_homopoly_len}{minimum homopolymer length to check and fix}
+\item{homopoly_minlen}{minimum homopolymer length to check and fix}
 }
 \value{
 a data frame with these columns:
