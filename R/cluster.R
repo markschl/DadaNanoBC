@@ -221,7 +221,7 @@ infer_barcode <- function(fq,
       # but this should rarely happen
       # cat('align/consensus all '); tictoc::tic()
       sel_reads <- reads[unlist(d$seq_indices)]  # mapped to any ASV
-      ref_seq <- with(d, setNames(sequence, id))
+      ref_seq <- setNames(d$sequence, d$id)
       cons <- ambig_consensus(
         sel_reads,
         ref_seq,
@@ -237,6 +237,19 @@ infer_barcode <- function(fq,
       )
       stopifnot(row.names(cons) == d$id)
       d <- cbind(d, cons)
+
+      if (any(d$n_mapped != d$abundance)) {
+        # sometimes, the read mapping leads to a different grouping,
+        # in which case we update 'seq_indices'
+        d$seq_indices <- seq_indices_from_bam(
+          round_prefix,
+          names(reads),
+          row.names(cons),
+          samtools = samtools
+        )
+        stopifnot(lengths(d$seq_indices) == d$n_mapped)
+      }
+
       # tictoc::toc()
       # Read numbers may (rarely) not be exactly the same as reads can map to the
       # "wrong" ASV (mapping not restricted) -> we use mapped reads
@@ -353,6 +366,9 @@ infer_barcode <- function(fq,
   # We have to re-map to the consensus if there are ambiguous bases or
   # any differences to the dominant ASV/unique split haplotype
   remap_cons <- d.sel$consensus_diffs > 0 | d.sel$consensus_ambigs > 0
+  # to be sure, we re-map *all* reads from a given taxon, since in rare cases
+  # reads *might* switch to another reference if re-mapping to the consensus
+  remap_cons <- ave(remap_cons, d.sel$taxon_num, FUN = any)
   remap_prefix <- file.path(tmp, 'remap_cons')
   # cat('assemble output '); tictoc::tic()
   if (all(!remap_cons)) {
@@ -459,7 +475,7 @@ infer_barcode <- function(fq,
   }
 
   # clean up
-  d$seq_indices = d$top_uniques = NULL
+  d$seq_indices <- d$top_uniques <- NULL
   unlink(tmp, TRUE)
 
   # calculate homopolymer stretch length
@@ -663,17 +679,17 @@ dada2_denoise <- function(x,
     }
     i
   })
-  d$seq_indices = cl[as.character(d$id)]
+  d$seq_indices <- cl[as.character(d$id)]
 
   # In addition, remember the two most abundant sequences, used later for haplotype splitting
-  d$top_uniques = lapply(d$seq_indices, function(i) {
+  d$top_uniques <- lapply(d$seq_indices, function(i) {
     uniq_freq <- tabulate(derep$map[i])
     i <- head(order(-uniq_freq), 2)
     setNames(uniq_freq[i], names(derep$uniques)[i])
   })
 
   # max. number of identical sequences (usually identical to inferred ASV sequence)
-  d$max_identical = sapply(d$top_uniques, max)
+  d$max_identical <- sapply(d$top_uniques, max)
 
   # attach more information
   attr(d, 'n_reads') = length(derep$map)
@@ -804,13 +820,15 @@ try_split_haplotypes <- function(reads,
           message = d.s$message
         )
         d2$top_uniques <- list(NULL, NULL)
-        # obtaining seq_indices is a bit more involved, but usually
-        # the number of reads is not too large here and this should be fast
-        # (DADA2 will separate haplotypes well given enough read depth,
-        # so try_split_haplotypes will not be required)
+        # get indices of reads belonging to the two haplotypes
         read_map <- bam_to_map(paste0(prefix_split, '.bam'), samtools = samtools)
         read_ids <- sapply(strsplit(names(reads), ' ', fixed = TRUE), '[', 1)
-        d2$seq_indices = split(match(names(read_map), read_ids), read_map)[row.names(cons)]
+        d2$seq_indices <- seq_indices_from_bam(
+          prefix_split,
+          names(reads),
+          row.names(cons),
+          samtools = samtools
+        )
         stopifnot(lengths(d2$seq_indices) == d2$n_mapped)
         # all other columns should be undefined
         d2$do_split = TRUE
@@ -1228,6 +1246,12 @@ bam_to_map <- function(bam_file, samtools = 'samtools') {
   out <- run_bash(c(samtools, 'view', bam_file), stdout = TRUE)
   out <- read.delim(textConnection(out), header = FALSE)[, c(1, 3)]
   setNames(out[[2]], out[[1]])
+}
+
+seq_indices_from_bam <- function(prefix, read_ids, ref_ids, samtools = 'samtools') {
+  read_ids <- stringr::word(read_ids, 1)
+  read_map <- bam_to_map(paste0(prefix, '.bam'), samtools = samtools)
+  split(match(names(read_map), read_ids), read_map)[as.character(ref_ids)]
 }
 
 # Fixed-threshold clustering (single-linkage by default)
