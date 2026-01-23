@@ -106,7 +106,7 @@
 #' @export
 infer_barcode <- function(fq,
                           dada_err,
-                          alignment_prefix,
+                          alignment_prefix = NULL,
                           id_prefix = NULL,
                           tmp_dir = NULL,
                           dada_omega_a = c(1e-20, 1e-10, 1e-2),
