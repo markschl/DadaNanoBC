@@ -131,9 +131,8 @@ infer_barcode <- function(fq,
   # paths/global options
   samtools <- get_program('samtools')
   minimap2 <- get_program('minimap2')
-  tmp_dir <- get_create_tmp_dir(tmp_dir)
-
   # temporary directory
+  tmp_dir <- get_create_tmp_dir(tmp_dir)
   tmp <- tempfile('infer_barcode_', tmpdir = tmp_dir)
   dir.create(tmp, FALSE, TRUE)
 

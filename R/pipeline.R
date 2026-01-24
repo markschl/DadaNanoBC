@@ -490,10 +490,11 @@ do_primer_search <- function(fq_paths,
 #'
 #' @export
 do_demux <- function(primer_search_fq,
-                      out_dir,
-                      sample_tab,
-                      error_threshold = 2.5,
-                      min_barcode_length = 50) {
+                     out_dir,
+                     sample_tab,
+                     error_threshold = 2.5,
+                     min_barcode_length = 50) {
+
 
   stopifnot(c('amplicon', 'indexes', 'sample', 'sample_type', 'taxon', 'known_sequence') %in% names(sample_tab))
   seqtool <- get_program('st', full_name = 'seqtool')
@@ -559,12 +560,12 @@ do_demux <- function(primer_search_fq,
 #'
 #' @export
 do_infer_all_barcodes <- function(seq_tab,
-                              dada_err,
-                              aln_out = NULL,
-                              tmp_dir = NULL,
-                              parallel_lapply_fn = NULL,
-                              ...,
-                              cores = 1) {
+                                  dada_err,
+                                  aln_out = NULL,
+                                  tmp_dir = NULL,
+                                  parallel_lapply_fn = NULL,
+                                  ...,
+                                  cores = 1) {
   # for parallel::clusterExport
   idx <- seq_len(nrow(seq_tab))
   stopifnot(!is.null(seq_tab$indexes))
@@ -577,6 +578,7 @@ do_infer_all_barcodes <- function(seq_tab,
     idx <- idx[sel_comb]
     batch_size <- max(1, min(12, ceiling(length(idx) / cores / 10)))
     idx_batches <- split(idx, ceiling(1:length(idx) / batch_size))
+    tmp_dir <- get_create_tmp_dir(tmp_dir)
     process_fn <- function(indexes) {
       lapply(indexes, function(i) {
         # i=which(seq_tab$indexes=='ITS5_bc485-ITS4_bc082')
@@ -590,7 +592,6 @@ do_infer_all_barcodes <- function(seq_tab,
         } else {
           alignment_prefix <- NULL
         }
-        tmp_dir <- get_create_tmp_dir(tmp_dir)
         d <- infer_barcode(
           fq,
           dada_err,
@@ -620,6 +621,10 @@ do_infer_all_barcodes <- function(seq_tab,
     stopifnot(sel_comb == names(res))
     seq_tab$clustering[sel_comb] <- res
     seq_tab <- propagate_data(seq_tab)
+  }
+  # remove temporary dir if not provided manually
+  if (is.null(tmp_dir)) {
+    unlink(get_create_tmp_dir(tmp_dir), recursive = TRUE)
   }
   seq_tab
 }
@@ -837,8 +842,8 @@ do_assign_taxonomy <- function(seq_tab,
   unique_map <- setNames(names(unique_seqs), unique_seqs)
 
   # assign using SINTAX
-  tmp_dir <- get_create_tmp_dir(tmp_dir)
-  seqs_tmp <- tempfile('seqs', tmpdir = tmp_dir, fileext = '.fasta')
+  tmpd <- get_create_tmp_dir(tmp_dir)
+  seqs_tmp <- tempfile('seqs', tmpdir = tmpd, fileext = '.fasta')
   write_dna(unique_seqs, seqs_tmp)
   seq_lineages <- assign_taxonomy_sintax(
     seqs_tmp,
@@ -851,6 +856,10 @@ do_assign_taxonomy <- function(seq_tab,
     names(unique_seqs), rownames(seq_lineages)
   )) == 0)
   file.remove(seqs_tmp)
+  # remove temporary dir if not provided manually
+  if (is.null(tmp_dir)) {
+    unlink(tmpd, recursive = TRUE)
+  }
 
   # summarize higher ranks at appropriate level
   # (for reports)
