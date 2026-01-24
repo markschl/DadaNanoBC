@@ -77,6 +77,8 @@ read_xlsx_sample_tab <- function(meta_file, sheet_name) {
     sheet_name,
     na.strings = c('#N/A', '')
   )
+  # it may happen that there are NA names
+  sample_tab <- sample_tab[!is.na(names(sample_tab))]
   # sample_tab <- tibble::as_tibble(sample_tab, .name_repair='unique_quiet')
   # empty cells might still have '0' (if a formula), we set these to NA
   sample_tab$sample = ifelse(!is.na(sample_tab$sample) & sample_tab$sample == '0',
