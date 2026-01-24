@@ -1,7 +1,7 @@
 Package: DadaNanoBC
 Type: Package
 Title: DADA2-Based Pipeline for Infering DNA Barcodes from Nanopore Sequence Data 
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person(
       "Markus", "Schlegel",
