@@ -13,7 +13,7 @@ do_trim_demux(
   idx_max_diffs = 0,
   min_barcode_length = 50,
   error_threshold = 2.5,
-  cores = 1,
+  cores = NULL,
   keep_trimmed = FALSE
 )
 }
@@ -43,7 +43,11 @@ for \emph{all} amplicons (default: 50 bp)}
 pass the filter in (see \link{do_demux}). Setting it too low may remove too many
 sequences, but setting it too high may lead to noisy/errorneous results.
 The default value of 2.5 seems to work well with R10.4 data and ~0.5-1.5 kb amplicons,
-removing about half of the trimmed sequences.}
+removing about half of the trimmed sequences.
+The value may still be adjusted based on how Figures 4 and 5 in the HTML report.}
+
+\item{cores}{Number of cores to use (default: 1, unless \code{getOption('DadaNanoBC.cores')}
+is defined, or the \code{DadaNanoBC_cores} environment variable is set)}
 }
 \value{
 A list of:

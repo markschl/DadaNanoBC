@@ -115,7 +115,7 @@ get_taxdb <- function(taxdb_dir, cfg) {
   db_file
 }
 
-assign_taxonomy_amplicons <- function(seq_tab, taxdb_cfg, taxdb_dir, cores = 1) {
+assign_taxonomy_amplicons <- function(seq_tab, taxdb_cfg, taxdb_dir) {
   amplicons <- unique(seq_tab$amplicon)
   amp_summary_ranks <- setNames(vector('list', length(amplicons)), amplicons)
   for (amplicon in amplicons) {
@@ -130,7 +130,6 @@ assign_taxonomy_amplicons <- function(seq_tab, taxdb_cfg, taxdb_dir, cores = 1) 
       seq_tab = seq_tab[sel, ],
       gbif_cache_file = gbif_cache_file,
       db_file = db_file,
-      cores = cores,
       cfg = cfg,
       exclude = c(amplicons, 'db_url', 'db_type', 'db_tax_url')
     )
@@ -150,8 +149,7 @@ recluster_contaminated <- function(seq_tab,
                                    aln_dir,
                                    max_sample_depth,
                                    max_contam_sample_depth = NULL,
-                                   amp_summary_ranks = NULL,
-                                   cores = 1) {
+                                   amp_summary_ranks = NULL) {
   do_recluster <- seq_tab$has_contamination &
     !is.na(seq_tab$n_reads) & seq_tab$n_reads >= max_sample_depth
   if (any(do_recluster)) {
@@ -164,13 +162,12 @@ recluster_contaminated <- function(seq_tab,
         seq_tab[sel, ],
         dada_err,
         aln_out = aln_dir,
-        cores = cores,
         cfg = cluster_cfg,
         inner_fn = infer_barcode,
         exclude = 'max_contam_sample_depth'
       )
       taxdb_cfg$summary_ranks <- amp_summary_ranks[[amplicon]]
-      tax <- assign_taxonomy_amplicons(amp_seqtab, taxdb_cfg, taxdb_dir, cores = cores)
+      tax <- assign_taxonomy_amplicons(amp_seqtab, taxdb_cfg, taxdb_dir)
       stopifnot(seq_tab$indexes[sel] == tax$seq_tab$indexes)
       seq_tab[sel, ] <- tax$seq_tab
     }
@@ -198,7 +195,11 @@ library(crew)
 # modify with Sys.setenv('DadaNanoBC_ANALYSIS_DIR' = ...)
 
 analysis_dir <- Sys.getenv('DadaNanoBC_ANALYSIS_DIR', 'analysis')
-n_workers <- as.integer(Sys.getenv('DadaNanoBC_WORKERS', max(parallel::detectCores(), 8)))
+n_workers <- as.integer(Sys.getenv('DadaNanoBC_cores'))
+if (is.na(n_workers)) {
+  n_workers <- max(parallel::detectCores(), 8)
+  Sys.setenv(DadaNanoBC_cores = n_workers)
+}
 tmp_dir = file.path(analysis_dir, 'tmp')
 taxdb_dir = 'taxdb'
 dir.create(taxdb_dir, FALSE, TRUE)
@@ -217,7 +218,7 @@ if (analysis_dir != 'analysis') {
 }
 
 message(sprintf(
-  "Running pipeline in '%s' with %d workers (intermediate store: %s)",
+  "Running pipeline in '%s' with %d cores (intermediate store: %s)",
   analysis_dir,
   n_workers,
   store
@@ -299,7 +300,6 @@ unlist(list(
       amplicon_primers,
       sample_tab,
       out_dir = file.path(tmp_dir, 'demux'),
-      cores = n_workers,
       cfg = config_demultiplex
     )
   ),
@@ -309,7 +309,6 @@ unlist(list(
     dada_learn_errors(
       sample(na.omit(trim_demux$seq_tab$reads_path)),
       omega_a = config_cluster$omega_a[1] %||% 1e-20,
-      cores = n_workers,
       nbases = 1e6
     )
   ),
@@ -345,8 +344,7 @@ unlist(list(
     assign_taxonomy_amplicons(
       cluster_seqtab_combined,
       config_taxdb,
-      taxdb_dir,
-      cores = n_workers
+      taxdb_dir
     )
   ),
   # Re-cluster contaminated samples with more reads if necessary
@@ -361,8 +359,7 @@ unlist(list(
       aln_dir = config_alignment_dir,
       max_sample_depth = config_cluster$max_sample_depth,
       max_contam_sample_depth = config_cluster$max_contam_sample_depth,
-      amp_summary_ranks = taxonomy$amp_summary_ranks,
-      cores = n_workers
+      amp_summary_ranks = taxonomy$amp_summary_ranks
     )
   ),
   # output files
@@ -391,11 +388,11 @@ unlist(list(
     format = 'file'
   ),
   tar_target(
-    combined_bam,
+    combine_bam,
     if ('combined' %in% config_output$alignments)
       do_combine_alignments(
         recluster_contam,
-        config_alignment_dir,
+        aln_dir = config_alignment_dir,
         outdir = file.path(analysis_dir, 'alignments'),
         top_only = FALSE
       ),

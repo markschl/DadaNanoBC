@@ -16,7 +16,7 @@ do_assign_compare_taxonomy(
   known_contaminants = NULL,
   likely_kingdom = NULL,
   contam_rank_delta = 3,
-  cores = 1
+  cores = NULL
 )
 
 do_assign_taxonomy(
@@ -25,7 +25,7 @@ do_assign_taxonomy(
   tmp_dir = NULL,
   confidence_threshold = 0.8,
   summary_ranks = NULL,
-  cores = 1
+  cores = NULL
 )
 
 do_compare_taxonomy(
@@ -67,6 +67,9 @@ This setting affects the "sensitivity" of the contaminant detection
 (lower: more sensitive, but also more false classifications,
 higher: some contamination may not be recognized).
 The default of 3 seems to work well in most cases.}
+
+\item{cores}{Number of cores to use (default: 1, unless \code{getOption('DadaNanoBC.cores')}
+is defined, or the \code{DadaNanoBC_cores} environment variable is set)}
 }
 \value{
 \code{do_assign_compare_taxonomy} returns

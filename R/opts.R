@@ -24,15 +24,15 @@
 #'
 #' @export
 set_global_opts <- function(...) {
-  dots <- list(...)
-  if (length(dots) == 0)
+  o <- list(...)
+  if (length(o) == 0)
     return()
-  names(dots) <- paste0('DadaNanoBC', names(dots))
-  do.call(options, dots)
+  names(o) <- paste0('DadaNanoBC.', names(o))
+  do.call(options, o)
   invisible(NULL)
 }
 
-get_opt <- function(o) {
+get_opt <- function(o, default = NULL) {
   value <- .env$vars[[o]]
   if (!is.null(value)) {
     return(value)
@@ -41,11 +41,13 @@ get_opt <- function(o) {
   if (is.null(value)) {
     value <- Sys.getenv(paste0('DadaNanoBC_', o))
     if (!nzchar(value)) {
-      return(NULL)
+      if (is.null(value <- default)) {
+        return(NULL)
+      }
     }
   }
   .env$opts[[o]] <- value
-  path
+  value
 }
 
 get_create_tmp_dir <- function(tmp_dir = NULL) {

@@ -109,7 +109,7 @@ Run the pipeline:
 targets::tar_make()
 ```
 
-> *Optional*: Modify the number of parallel processes before calling `tar_make`: `Sys.setenv('DadaNanoBC_WORKERS' = 8)`
+> *Optional*: Modify the number of parallel processes before calling `tar_make`: `Sys.setenv('DadaNanoBC_cores' = 8)`
 
 ### Output
 
@@ -163,13 +163,13 @@ as described [above](#running-the-targets-pipeline).
 Run the pipeline (for the default *analysis* directory, may be [changed](#running-a-different-analysis)):
 
 ```sh
-./infer_barcodes analysis
+./infer_barcodes
 ```
 
 Additional settings can be added, as in this more complicated/realistic example (see also [custom program location](#custom-program-location)):
 
 ```sh
-./infer_barcodes WORKERS=8 vsearch=path/to/vsearch
+./infer_barcodes cores=8 vsearch=path/to/vsearch
 ```
 
 [Different analysis](#running-a-different-analysis) in another directory:

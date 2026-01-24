@@ -300,7 +300,9 @@ parse_primer_tab <- function(primer_tab, amplicons = NULL) {
 #' sequences, but setting it too high may lead to noisy/errorneous results.
 #' The default value of 2.5 seems to work well with R10.4 data and ~0.5-1.5 kb amplicons,
 #' removing about half of the trimmed sequences.
-#  The value may still be adjusted based on how Figures 4 and 5 in the HTML report.
+#' The value may still be adjusted based on how Figures 4 and 5 in the HTML report.
+#' @param cores Number of cores to use (default: 1, unless `getOption('DadaNanoBC.cores')`
+#' is defined, or the `DadaNanoBC_cores` environment variable is set)
 #'
 #' @returns A list of:
 #' - `seq_tab`: `sample_tab` with a `reads_path` column and additional rows
@@ -322,7 +324,7 @@ do_trim_demux <- function(fq_paths,
                           idx_max_diffs = 0,
                           min_barcode_length = 50,
                           error_threshold = 2.5,
-                          cores = 1,
+                          cores = NULL,
                           keep_trimmed = FALSE) {
   trim_dir <- file.path(out_dir, '_trim')
   trim <- do_primer_search(
@@ -332,7 +334,7 @@ do_trim_demux <- function(fq_paths,
     primer_max_err = primer_max_err,
     idx_max_diffs = idx_max_diffs,
     min_barcode_length = min_barcode_length,
-    cores = cores
+    cores = cores %||% get_opt('cores', 1)
   )
   n <- trim$stats$counts
   if (sum(n$count[n$valid]) == 0) {
@@ -369,9 +371,10 @@ do_primer_search <- function(fq_paths,
                               primer_max_err = 0.2,
                               idx_max_diffs = 0,
                               min_barcode_length = 50,
-                              cores = 1) {
+                              cores = NULL) {
   amplicons <- names(amplicon_primers)
   seqtool <- get_program('st', full_name = 'seqtool')
+  cores <- as.integer(cores %||% get_opt('cores', 1))
   for (amplicon in amplicons) {
     amp_search_dir <- file.path(out_dir, amplicon)
     demux_fq <- file.path(amp_search_dir, 'trimmed.fastq.zst')
@@ -556,6 +559,10 @@ do_demux <- function(primer_search_fq,
 #' @param aln_out Optional output directory for BAM alignments (none saved if `NULL`)
 #' @param tmp_dir Optional temporary directory
 #' (default: user-specific temporary directory, see [set_global_opts])
+#' @param parallel_lapply_fn Optional lapply-like function
+#' @param ... passed to [infer_barcode]
+#' @param cores Number of cores to use (default: 1, unless `getOption('DadaNanoBC.cores')`
+#' is defined, or the `DadaNanoBC_cores` environment variable is set)
 #'
 #' @returns Input table (`seq_tab`) with a new column `clustering`, which is a list
 #' of data frames as returned by [infer_barcode]
@@ -567,8 +574,8 @@ do_infer_all_barcodes <- function(seq_tab,
                                   tmp_dir = NULL,
                                   parallel_lapply_fn = NULL,
                                   ...,
-                                  cores = 1) {
-  # for parallel::clusterExport
+                                  cores = NULL) {
+  cores <- as.integer(cores %||% get_opt('cores', 1))
   idx <- seq_len(nrow(seq_tab))
   stopifnot(!is.null(seq_tab$indexes))
   stopifnot(!is.na(seq_tab$indexes))
@@ -771,6 +778,8 @@ propagate_data <- function(seq_tab, extra_seq_cols = NULL) {
 #'   (lower: more sensitive, but also more false classifications,
 #'   higher: some contamination may not be recognized).
 #'   The default of 3 seems to work well in most cases.
+#' @param cores Number of cores to use (default: 1, unless `getOption('DadaNanoBC.cores')`
+#' is defined, or the `DadaNanoBC_cores` environment variable is set)
 #'
 #' @returns
 #' `do_assign_compare_taxonomy` returns
@@ -816,7 +825,7 @@ do_assign_compare_taxonomy <- function(seq_tab,
                                        known_contaminants = NULL,
                                        likely_kingdom = NULL,
                                        contam_rank_delta = 3,
-                                       cores = 1) {
+                                       cores = NULL) {
   tax <- do_assign_taxonomy(
     seq_tab,
     db_file,
@@ -844,7 +853,8 @@ do_assign_taxonomy <- function(seq_tab,
                                tmp_dir = NULL,
                                confidence_threshold = 0.8,
                                summary_ranks = NULL,
-                               cores = 1) {
+                               cores = NULL) {
+  cores <- as.integer(cores %||% get_opt('cores', 1))
   # De-duplicate sequences
   stopifnot(!is.null(seq_tab$clustering))
   unique_seqs <- sort(unique(unlist(

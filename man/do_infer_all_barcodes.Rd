@@ -11,7 +11,7 @@ do_infer_all_barcodes(
   tmp_dir = NULL,
   parallel_lapply_fn = NULL,
   ...,
-  cores = 1
+  cores = NULL
 )
 }
 \arguments{
@@ -23,6 +23,13 @@ do_infer_all_barcodes(
 
 \item{tmp_dir}{Optional temporary directory
 (default: user-specific temporary directory, see \link{set_global_opts})}
+
+\item{parallel_lapply_fn}{Optional lapply-like function}
+
+\item{...}{passed to \link{infer_barcode}}
+
+\item{cores}{Number of cores to use (default: 1, unless \code{getOption('DadaNanoBC.cores')}
+is defined, or the \code{DadaNanoBC_cores} environment variable is set)}
 }
 \value{
 Input table (\code{seq_tab}) with a new column \code{clustering}, which is a list
