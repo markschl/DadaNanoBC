@@ -672,7 +672,7 @@ if (any(seq_tab$has_contamination)) {
   cont$contaminants = sapply(cont$clustering, function(d) paste(unique(d$taxon[d$is_contaminant]), collapse=', '))
   rownames(cont) <- NULL
   cont %>% 
-    select(sample, taxon, `correct taxon`=top_seq_taxon, contaminants) %>% 
+    select(sample, taxon, `selected taxon` = top_seq_taxon, `putative contaminants` = contaminants) %>% 
     mutate(sample = stringr::str_trunc(sample, 30))
 }
 ```
