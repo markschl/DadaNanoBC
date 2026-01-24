@@ -377,11 +377,11 @@ unlist(list(
     out
   }, format = 'file'),
   tar_target(
-    combined_bam_top,
+    combine_bam_top,
     if ('top_combined' %in% config_output$alignments)
       do_combine_alignments(
         recluster_contam,
-        config_alignment_dir,
+        aln_dir = config_alignment_dir,
         outdir = file.path(analysis_dir, 'top_alignments'),
         top_only = TRUE
       ),

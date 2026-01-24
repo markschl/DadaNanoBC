@@ -8,7 +8,7 @@ compare_seqs(d, bam_out, tmp_dir = NULL, known_seq = NULL)
 }
 \arguments{
 \item{d}{data frame returned by \link{infer_barcode}
-(needs a \emph{consensus} and \emph{sequence} column).}
+(needs these columns: \emph{taxon_num}, \emph{consensus}, \emph{sequence}, \emph{is_rare})}
 
 \item{bam_out}{path of BAM output file}
 
@@ -17,17 +17,27 @@ compare_seqs(d, bam_out, tmp_dir = NULL, known_seq = NULL)
 \item{known_seq}{optional known sequence}
 }
 \value{
-Adds a \code{consensus_diffs} column to \code{d} (NA if not compared, Inf if not mapped
-due to too many mismatches)
-TODO: ambiguous bases unfortunately lead to mismatches
+Returns the input data frame with the following additional columns:
+\itemize{
+\item \code{consensus_diffs}: Number of ASV/consensus differences
+(NA if not compared, Inf if not mapped due to too many mismatches).
+Base/ambiguity or ambiguity/ambiguity matching is also done.
+Mismatches are only reported if there is no overlap between the
+two (partially matching ambiguities still count as match).
+\item \code{is_compare_ref}: logical indicating whether a consensus sequence was
+used as reference for the comparison within a taxon
+}
 }
 \description{
 Aligns different sequences/haplotypes per putative taxon
 (if there are multiple) by mapping all of them to the first sequence
 (including the first sequence itself).
-The resulting small BAM files are useful for visual comparisons
+The resulting small BAM files are useful for visual comparisons.
 
 Also aligns DADA2 ASV sequences that don't match the consensus,
 as well as any provided 'known' sequences. For the putative taxa
 concerned, \emph{all} sequences are included for comparison.
+
+Usually the first sequence within a taxon is chosen as reference,
+or the one matching the known sequence
 }

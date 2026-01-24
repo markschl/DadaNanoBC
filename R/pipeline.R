@@ -644,12 +644,20 @@ do_infer_all_barcodes <- function(seq_tab,
 #' @param seq_tab Sequence table as returned by [do_infer_all_barcodes] or downstream functions
 #' @param aln_dir Alignment directory (as provided to [do_infer_all_barcodes])
 #' @param out_prefix Output prefix for '.bam', '.bam.bai' and '.fasta' files
+#' @param top_only include only the top taxon
+#' @param cores Number of cores to use (default: 1, unless `getOption('DadaNanoBC.cores')`
+#' is defined, or the `DadaNanoBC_cores` environment variable is set)
 #'
 #' @returns Named list of output files
 #'
 #' @export
-do_combine_alignments <- function(seq_tab, aln_dir, outdir, top_only = FALSE) {
+do_combine_alignments <- function(seq_tab,
+                                  aln_dir,
+                                  outdir,
+                                  top_only = FALSE,
+                                  cores = NULL) {
   samtools <- get_program('samtools')
+  cores <- as.integer(cores %||% get_opt('cores', 1))
   dir.create(outdir, FALSE, TRUE)
   out_prefix <- file.path(outdir, 'alignments')
   # combine mapped reads
@@ -681,16 +689,19 @@ do_combine_alignments <- function(seq_tab, aln_dir, outdir, top_only = FALSE) {
     }
     if (top_only) {
       max_abund <- ave(d$n_mapped, d$taxon_num, FUN = max)
-      sel <- sel & d$taxon_num == d$taxon_num[1] | max_abund == max(max_abund)
+      sel <- sel &
+        d$taxon_num == d$taxon_num[1] | max_abund == max(max_abund)
     }
     list(paste0(idx_path[i], '_seq_comparison'), d$full_id[sel])
   })
   sel_list <- sel_list[!sapply(sel_list, is.null)]
-  cmp_out <- subset_combine_bam(paste0(out_prefix, '_seq_comparison'),
-                                sel_list,
-                                write_refs = FALSE,
-                                allow_unknown = TRUE,
-                                samtools = samtools)
+  cmp_out <- subset_combine_bam(
+    paste0(out_prefix, '_seq_comparison'),
+    sel_list,
+    write_refs = FALSE,
+    allow_unknown = TRUE,
+    samtools = samtools
+  )
 
   c(outfiles, cmp_out)
 }

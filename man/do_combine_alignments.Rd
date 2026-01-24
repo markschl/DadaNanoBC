@@ -4,12 +4,17 @@
 \alias{do_combine_alignments}
 \title{Combine all BAM alignment files into a single one}
 \usage{
-do_combine_alignments(seq_tab, aln_dir, outdir, top_only = FALSE)
+do_combine_alignments(seq_tab, aln_dir, outdir, top_only = FALSE, cores = NULL)
 }
 \arguments{
 \item{seq_tab}{Sequence table as returned by \link{do_infer_all_barcodes} or downstream functions}
 
 \item{aln_dir}{Alignment directory (as provided to \link{do_infer_all_barcodes})}
+
+\item{top_only}{include only the top taxon}
+
+\item{cores}{Number of cores to use (default: 1, unless \code{getOption('DadaNanoBC.cores')}
+is defined, or the \code{DadaNanoBC_cores} environment variable is set)}
 
 \item{out_prefix}{Output prefix for '.bam', '.bam.bai' and '.fasta' files}
 }

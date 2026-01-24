@@ -592,6 +592,8 @@ compare_seqs <- function(d,
     args <- c(seq_file, ref_file, bam_out, 1, minimap2, samtools)
     run_bash_script('map_ref_simple.sh', args)
     invisible(file.remove(seq_file, ref_file))
+  } else {
+    d$is_compare_ref <- FALSE
   }
   d
 }
@@ -926,6 +928,7 @@ subset_combine_bam <- function(out_prefix,
         fast = fast,
         write_refs = write_refs,
         do_index = FALSE,
+        allow_unknown = allow_unknown,
         samtools = samtools
       )
     }
@@ -1004,7 +1007,7 @@ subset_combine_bam <- function(out_prefix,
   # clean up temporary files
   if (recursive) {
     for (prefix in sel_list) {
-      remove_bam(prefix, index = FALSE)
+      remove_bam(prefix, refs = write_refs, index = FALSE)
     }
   }
 
@@ -1268,8 +1271,15 @@ move_bam <- function(prefix, out_prefix) {
   }
 }
 
-remove_bam <- function(prefix, out_prefix, index=TRUE) {
-  invisible(file.remove(paste0(prefix, c('.fasta', '.bam', if (index) '.bam.bai'))))
+remove_bam <- function(prefix,
+                       out_prefix,
+                       refs = TRUE,
+                       index = TRUE) {
+  invisible(file.remove(paste0(
+    prefix, c(if (refs)
+      '.fasta', '.bam', if (index)
+        '.bam.bai')
+  )))
 }
 
 bam_to_map <- function(bam_file, samtools = 'samtools') {
