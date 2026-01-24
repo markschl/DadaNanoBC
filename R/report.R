@@ -20,15 +20,15 @@
 #' @importFrom openxlsx2 wb_workbook wb_dims wb_color wb_comment int2col
 #' @export
 create_excel_report <- function(seq_tab,
-                          outfile,
-                          low_abund_threshold = 20,
-                          min_seqs_unknown = 10,
-                          n_curate = 4,
-                          n_show_depth = 6,
-                          bam_dir = NULL
-                          ) {
+                                outfile,
+                                low_abund_threshold = 20,
+                                min_seqs_unknown = 10,
+                                n_curate = 4,
+                                n_show_depth = 6,
+                                bam_dir = NULL) {
 
-  seq_tab_def <- seq_tab[!is.na(seq_tab$sample) | !is.na(seq_tab$n_reads) & seq_tab$n_reads >= min_seqs_unknown,]
+  sel <- !is.na(seq_tab$sample) | !is.na(seq_tab$n_reads) & seq_tab$n_reads >= min_seqs_unknown
+  seq_tab_def <- seq_tab[sel,]
 
   # TODO: should issues only be reported for most abundant seq or for all?
   #   (right now: for all)
@@ -227,7 +227,7 @@ create_excel_report <- function(seq_tab,
       'Proportions < 50% may due to contamination or low sequence quality,',
       'or can also appear with low read depths (<500)'
     ),
-    'issues' = 'See https://markschl.github.io/DadaNanoBC/curation/#list-of-issues'
+    'issues' = 'See https://markschl.github.io/DadaNanoBC/articles/curation'
   )
 
   row_i <- 2+1:nrow(out)
@@ -302,18 +302,15 @@ create_excel_report <- function(seq_tab,
     name = 'ambig',
     font_color = wb_color(hex = "bb34bd")
   )
-  ranges <- list(
-    length(fixed_cols) + c(1, n_curate),
-    length(fixed_cols) + c(1, n_clust)
-  )
-  for (i in 0:2) {
+  for (i in c(0:2, 4)) {
     wb$add_conditional_formatting(
-      dims = wb_dims(rows=row_i, cols=(length(fixed_cols) + i*n_curate) + c(1, n_curate)),
+      dims = wb_dims(rows=row_i, cols=(length(fixed_cols) + i*n_curate) + 1:n_curate),
       style = 'ambig',
       rule = sprintf('%s3="a"', int2col(length(fixed_cols) + 3 * n_curate + 1)),
     )
   }
 
+  # add FASTA formulas
 
   wb$add_dxfs_style(
     name = 'edited',
@@ -342,6 +339,8 @@ create_excel_report <- function(seq_tab,
       dims=wb_dims(cols=match(paste0('FA', i), cols), rows=row_i)
     )
 
+    # highlight edited sequences
+
     for (prefix in c('seq', 'FA')) {
       wb$add_conditional_formatting(
         dims = wb_dims(rows=row_i, cols=match(paste0(prefix, i), cols)),
@@ -353,7 +352,7 @@ create_excel_report <- function(seq_tab,
     }
   }
 
-  # hyperlinks
+  # alignment data hyperlinks
 
   if (!is.null(bam_dir)) {
     # simple check for relative path (no parent links possible)
@@ -416,39 +415,30 @@ create_excel_report <- function(seq_tab,
 
   # taxonomy issues
 
-  lv <- sprintf('%s-suspicious-taxon', c('slightly', 'quite', 'very'))
-  wb$add_dxfs_style(
-    name = lv[1],
-    font_color = wb_color(hex = "987341"),
-    bg_fill = wb_color(hex = "e9f3fb")
-  )
-  wb$add_dxfs_style(
-    name = lv[2],
-    font_color = wb_color(hex = "ce9a11"),
-    bg_fill = wb_color(hex = "e9f3fb")
-  )
-  wb$add_dxfs_style(
-    name = lv[3],
-    font_color = wb_color(hex = "f8696b"),
-    bg_fill = wb_color(hex = "e9f3fb"),
-    text_bold = T
-  )
+  tax_grp <- sprintf('%s-suspicious-taxon', c('slightly', 'quite', 'very', 'unknown'))
+  tax_cols <- c('987341', 'ce9a11', 'f8696b', '747272')
+  for (i in seq_along(tax_grp)) {
+    wb$add_dxfs_style(
+      name = tax_grp[i],
+      font_color = wb_color(hex = tax_cols[i]),
+      bg_fill = wb_color(hex = 'e9f3fb'),
+      text_bold = i == 3
+    )
+  }
   tax_format <- function(rows, match_col, colrng) {
     ref1 <- ref(match_col, min(rows), lock='col')
+    cmp <- c('=1', '=2', '>=3')
+    for (i in 1:3) {
+      wb$add_conditional_formatting(
+        dims = wb_dims(rows=rows, cols=colrng),
+        style = tax_grp[i],
+        rule = sprintf('RIGHT(%s,1)-LEFT(%s,1)%s', ref1, ref1, cmp[i])
+      )
+    }
     wb$add_conditional_formatting(
       dims = wb_dims(rows=rows, cols=colrng),
-      style = lv[1],
-      rule = sprintf('RIGHT(%s,1)-LEFT(%s,1)=1', ref1, ref1),
-    )
-    wb$add_conditional_formatting(
-      dims = wb_dims(rows=rows, cols=colrng),
-      style = lv[2],
-      rule = sprintf('RIGHT(%s,1)-LEFT(%s,1)=2', ref1, ref1),
-    )
-    wb$add_conditional_formatting(
-      dims = wb_dims(rows=rows, cols=colrng),
-      style = lv[3],
-      rule = sprintf('RIGHT(%s,1)-LEFT(%s,1)>=3', ref1, ref1),
+      style = tax_grp[4],
+      rule = sprintf('RIGHT(%s,1) <= 1', ref1)
     )
   }
 
