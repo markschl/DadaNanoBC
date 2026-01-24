@@ -331,8 +331,9 @@ get_gbif_taxa <- function(taxa,
     } else {
       m <- seq_len(nrow(d))
     }
-    t <- as.data.frame(suppressMessages(rgbif::name_backbone_checklist(d)))
-    t <- t[match(1:nrow(d), t$verbatim_index), ]
+    d <- cbind(scientificName = d$name, d[names(d) != 'name'])
+    # run the search: the output order should be the same as the input order
+    t <- as.data.frame(rgbif::name_backbone_checklist(d))
     stopifnot(t$verbatim_name == d$name)
     for (r in setdiff(gbif_ranks, names(t))) {
       t[[r]] = NA_character_

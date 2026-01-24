@@ -28,7 +28,7 @@ Imports:
     Biostrings,
     DECIPHER (>= 2.0.0),
     stringr,
-    rgbif (>= 3.7.0),
+    rgbif (>= 3.7.2),
     openxlsx2
 Depends:
     R (>= 3.5)
