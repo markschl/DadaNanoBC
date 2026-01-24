@@ -446,11 +446,16 @@ infer_barcode <- function(fq,
   # Finally: assign intuitively understandable names to sequences
   orig_id <- d$id
   d$id <- paste0('taxon', d$taxon_num)
-  sel <- ave(d$id, d$taxon_num, FUN=length) > 1
+  sel <- ave(!d$is_rare, d$taxon_num, FUN=sum) > 1
   d$id[sel] <- sprintf(
     '%s_seq%s',
     d$id[sel],
     ave(d$id[sel], d$taxon_num[sel], FUN=seq_along)
+  )
+  d$id[d$is_rare] <- sprintf(
+    '%s_rare_seq%s',
+    d$id[d$is_rare],
+    ave(d$id[d$is_rare], d$taxon_num[d$is_rare], FUN=seq_along)
   )
   id_prefix <- if (is.null(id_prefix)) {
     ''
@@ -482,12 +487,12 @@ infer_barcode <- function(fq,
   d$seq_indices <- d$top_uniques <- NULL
   unlink(tmp, TRUE)
 
-  # calculate homopolymer stretch length
+  # max. homopolymer stretch length
   l <- rle(utf8ToInt(d$consensus[1]))$lengths
   d$max_homopoly_len = max(l)
 
-  attributes(d)[names(dada_detail)] = dada_detail
-  attr(d, 'omega_a') = dada_omega_a[dada_attempt]
+  attributes(d)[names(dada_detail)] <- dada_detail
+  attr(d, 'omega_a') <- dada_omega_a[dada_attempt]
   d
 }
 
