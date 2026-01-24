@@ -239,7 +239,8 @@ infer_barcode <- function(fq,
 
       if (any(d$n_mapped != d$abundance)) {
         # sometimes, the read mapping leads to a different grouping,
-        # in which case we update 'seq_indices'
+        # in which case we update 'seq_indices' and 'top_uniques' to reflect the
+        # mapped read groups
         d$seq_indices <- seq_indices_from_bam(
           round_prefix,
           names(reads),
@@ -247,6 +248,10 @@ infer_barcode <- function(fq,
           samtools = samtools
         )
         stopifnot(lengths(d$seq_indices) == d$n_mapped)
+        d$top_uniques <- lapply(d$seq_indices, function(i) {
+          t <- head(sort(table(as.character(reads[i])), TRUE), 2)
+          setNames(as.vector(t), names(t))
+        })
       }
 
       # tictoc::toc()
@@ -737,6 +742,7 @@ try_split_haplotypes <- function(reads,
   check_split <- d$consensus_ambigs > 0 &
     # at least min_identical uniques are required for both resulting haplotypes
     sapply(d$top_uniques, min) >= min_identical &
+    lengths(d$top_uniques) >= 2 &
     # simple approximate pre-filtering:
     # enforce 2.5*max_ratio for uniques, based on the fact that unique abundances
     # correlate with final mapped read abundances
@@ -751,8 +757,9 @@ try_split_haplotypes <- function(reads,
     # for each ASV, select the two top unique sequences as references for mapping + consensus
     prefix_split <- paste0(prefix, '_split')
     sel_reads <- reads[unlist(d$seq_indices[check_split])]
-    ref_seq <- unlist(setNames(lapply(d$top_uniques[check_split], function(x) {
-      setNames(names(x), seq_along(x))
+    ref_seq <- unlist(setNames(lapply(d$top_uniques[check_split], function(u) {
+      u <- u[1:2]
+      setNames(names(u), seq_along(u))
     }), d$id[check_split]))
     # do mapping + consensus for all candidates at once
     # (rarely reads might switch to a different reference)
@@ -818,6 +825,7 @@ try_split_haplotypes <- function(reads,
           method = paste0(d.s$method, '_split'),
           message = d.s$message
         )
+        # not used any further -> initialize with NULL
         d2$top_uniques <- list(NULL, NULL)
         # get indices of reads belonging to the two haplotypes
         read_map <- bam_to_map(paste0(prefix_split, '.bam'), samtools = samtools)
@@ -1079,11 +1087,11 @@ ambig_consensus <- function(seqs,
   invisible(file.remove(cons_out))
 
   # compare reference with consensus and fix homopolymers
-  different <- ref_seq != out$consensus
+  different <- ref_seq != out$consensus | is.na(out$consensus)
   if (any(different)) {
     out$consensus_diffs[different] <- NA
     stopifnot(length(homopoly_fix) %in% c(1, length(different)))
-    homopoly_fix <- different & homopoly_fix
+    homopoly_fix <- different & homopoly_fix & !is.na(out$consensus)
     if (any(homopoly_fix)) {
       res <- fix_homopolymers(out$consensus[homopoly_fix],
                               ref_seq[homopoly_fix],
@@ -1100,12 +1108,11 @@ ambig_consensus <- function(seqs,
   # ambiguities in the consensus can still match the sequence
   # redo reference/consensus alignment for adjusted consensus seqs.
   if (any(different)) {
-    # TODO: could reuse certain alignments from homopolymer fix
-    sel <- is.na(out$consensus_diffs) | out$consensus_diffs > 0
+    sel <- (is.na(out$consensus_diffs) | out$consensus_diffs > 0) & !is.na(out$consensus)
     if (any(sel)) {
       aln <- pairwise_align(out$consensus[sel], ref_seq[sel])
       out$consensus_diffs[sel] <- get_aln_stats(aln, simplify = FALSE)[, 'diffs']
-      stopifnot(is.finite(out$consensus_diffs))
+      stopifnot(is.finite(out$consensus_diffs[sel]))
     }
   }
 
