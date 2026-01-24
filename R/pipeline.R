@@ -642,12 +642,15 @@ do_infer_all_barcodes <- function(seq_tab,
 #'
 #' @export
 do_combine_alignments <- function(seq_tab, aln_dir, outdir, top_only = FALSE) {
+  samtools <- get_program('samtools')
+  dir.create(outdir, FALSE, TRUE)
+  out_prefix <- file.path(outdir, 'alignments')
   # combine mapped reads
   idx_path <- file.path(aln_dir, seq_tab$indexes, seq_tab$indexes)
   sel_i <- which(!is.na(seq_tab$omega_a))
   sel_list <- if (top_only) {
-    lapply(sel_i, function(j) {
-      d <- seq_tab$clustering[[j]]
+    lapply(sel_i, function(i) {
+      d <- seq_tab$clustering[[i]]
       sel <- d$taxon_num == d$taxon_num[1] & !d$is_rare
       if (d$taxon_num[1] != 1) {
         # list was reordered, which suggests contamination:
@@ -655,24 +658,33 @@ do_combine_alignments <- function(seq_tab, aln_dir, outdir, top_only = FALSE) {
         max_abund <- ave(d$n_mapped, d$taxon_num, FUN = max)
         sel <- sel | max_abund == max(max_abund) & !d$is_rare
       }
-      list(idx_path[j], d$full_id[sel])
+      list(idx_path[i], d$full_id[sel])
     })
   } else {
     idx_path[sel_i]
   }
-  samtools <- get_program('samtools')
-  dir.create(outdir, FALSE, TRUE)
-  out_prefix <- file.path(outdir, 'alignments')
   outfiles <- subset_combine_bam(out_prefix, sel_list, samtools = samtools)
+
   # combine sequence comparisons
-  sel <- !is.na(seq_tab$has_seq_comparison) &
-    seq_tab$has_seq_comparison
-  cmp_out <- subset_combine_bam(
-    paste0(out_prefix, '_seq_comparison'),
-    paste0(idx_path, '_seq_comparison')[sel],
-    write_refs = FALSE,
-    samtools = samtools
-  )
+  sel_list <- lapply(sel_i, function(i) {
+    d <- seq_tab$clustering[[i]]
+    sel <- d$is_compare_ref
+    if (!any(sel)) {
+      return(NULL)
+    }
+    if (top_only) {
+      max_abund <- ave(d$n_mapped, d$taxon_num, FUN = max)
+      sel <- sel & d$taxon_num == d$taxon_num[1] | max_abund == max(max_abund)
+    }
+    list(paste0(idx_path[i], '_seq_comparison'), d$full_id[sel])
+  })
+  sel_list <- sel_list[!sapply(sel_list, is.null)]
+  cmp_out <- subset_combine_bam(paste0(out_prefix, '_seq_comparison'),
+                                sel_list,
+                                write_refs = FALSE,
+                                allow_unknown = TRUE,
+                                samtools = samtools)
+
   c(outfiles, cmp_out)
 }
 
@@ -680,7 +692,7 @@ do_combine_alignments <- function(seq_tab, aln_dir, outdir, top_only = FALSE) {
 # Propagate information from nested cluster tables to the main seq_tab
 propagate_data <- function(seq_tab, extra_seq_cols = NULL) {
   # Propagate sample-level attributes to seq_tab
-  attr_cols <- c('n_reads', 'n_singletons', 'omega_a', 'has_seq_comparison')
+  attr_cols <- c('n_reads', 'n_singletons', 'omega_a')
   for (a in attr_cols) {
     seq_tab[[a]] = sapply(seq_tab$clustering, function(cl)
       attr(cl, a) %||% NA)

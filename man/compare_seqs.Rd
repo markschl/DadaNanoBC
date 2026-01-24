@@ -2,12 +2,19 @@
 % Please edit documentation in R/cluster.R
 \name{compare_seqs}
 \alias{compare_seqs}
-\title{Compare consensus/ASV and known sequences}
+\title{Compare different sequences per taxon}
 \usage{
-compare_seqs(d, bam_out = NULL, tmp_dir = NULL, known_seq = NULL)
+compare_seqs(d, bam_out, tmp_dir = NULL, known_seq = NULL)
 }
 \arguments{
-\item{data}{frame returned by \link{infer_barcode} (needs the \emph{consensus} column).}
+\item{d}{data frame returned by \link{infer_barcode}
+(needs a \emph{consensus} and \emph{sequence} column).}
+
+\item{bam_out}{path of BAM output file}
+
+\item{tmp_dir}{optional temporary directory}
+
+\item{known_seq}{optional known sequence}
 }
 \value{
 Adds a \code{consensus_diffs} column to \code{d} (NA if not compared, Inf if not mapped
@@ -15,8 +22,12 @@ due to too many mismatches)
 TODO: ambiguous bases unfortunately lead to mismatches
 }
 \description{
-Maps already known sequences or inconsistent ASV sequences against the consensus
-and creates very small BAM alignment files containing just inconsistent
-consensus <-> cluster sequence comparisons and consensus <-> known sequence comparisons
-(also useful for manual inspection)
+Aligns different sequences/haplotypes per putative taxon
+(if there are multiple) by mapping all of them to the first sequence
+(including the first sequence itself).
+The resulting small BAM files are useful for visual comparisons
+
+Also aligns DADA2 ASV sequences that don't match the consensus,
+as well as any provided 'known' sequences. For the putative taxa
+concerned, \emph{all} sequences are included for comparison.
 }

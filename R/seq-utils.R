@@ -17,6 +17,10 @@ read_dna <- function(seq_file, ...) {
   Biostrings::readDNAStringSet(seq_file, ...)
 }
 
+reverse_complement <- function(seq) {
+  Biostrings::reverseComplement(Biostrings::DNAStringSet(seq))
+}
+
 # Does a pairwise alignment between pairs of sequences
 # (DECIPHER::AlignPairs with some default settings)
 pairwise_align <- function(seq1,
@@ -37,6 +41,7 @@ pairwise_align <- function(seq1,
   )
 }
 
+
 # Extracts the number of mismatches and pattern/subject gaps
 # from a DECIPHER::AlignPairs result.
 # Sets all values to Inf if the overlap length relative to 'seq1'
@@ -49,27 +54,38 @@ get_aln_stats <- function(aln,
     # filter end gaps
     # TODO: better way?
     aln$PatternGapLength = lapply(1:nrow(aln), function(i) {
-      aln$PatternGapLength[[i]][aln$PatternGapPosition[[i]] > 1 & aln$PatternGapPosition[[i]] <= aln$PatternEnd[i]]
+      aln$PatternGapLength[[i]][aln$PatternGapPosition[[i]] > 1 &
+                                  aln$PatternGapPosition[[i]] <= aln$PatternEnd[i]]
     })
     aln$SubjectGapLength = lapply(1:nrow(aln), function(i) {
-      aln$SubjectGapLength[[i]][aln$SubjectGapPosition[[i]] > 1 & aln$SubjectGapPosition[[i]] <= aln$SubjectEnd[i]]
+      aln$SubjectGapLength[[i]][aln$SubjectGapPosition[[i]] > 1 &
+                                  aln$SubjectGapPosition[[i]] <= aln$SubjectEnd[i]]
     })
   }
   out <- lapply(1:nrow(aln), function(i) {
-    a <- aln[i,]
+    a <- aln[i, ]
     seq1_coverage <- (a$Matches + a$Mismatches) / (a$PatternEnd - a$PatternStart + 1)
     out <- if (seq1_coverage >= min_overlap) {
-      c(mismatches = a$Mismatches[1],
+      c(
+        mismatches = a$Mismatches[1],
         seq1_gaps = sum(a$PatternGapLength[[1]]),
-        seq2_gaps = sum(a$SubjectGapLength[[1]]))
+        seq2_gaps = sum(a$SubjectGapLength[[1]])
+      )
     } else {
-      c(mismatches=Inf, seq1_gaps=Inf, seq2_gaps=Inf)
+      c(
+        mismatches = Inf,
+        seq1_gaps = Inf,
+        seq2_gaps = Inf
+      )
     }
     out['gaps'] = out['seq1_gaps'] + out['seq2_gaps']
     out['diffs'] = out['mismatches'] + out['gaps']
     out
   })
-  out <- simplify2array(out, except=if (simplify) c(0L, 1L) else NA)
+  out <- simplify2array(out, except = if (simplify)
+    c(0L, 1L)
+    else
+      NA)
   if (!is.null(dim(out))) {
     out <- t(out)
   }

@@ -17,5 +17,3 @@ $minimap2 -ax map-ont -t $cores "$ref" "$reads" 2>/dev/null |
 
 $samtools index "$bam_out"
 rm -f "$ref".fai
-
-$samtools view "$bam_out"

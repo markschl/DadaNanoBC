@@ -497,84 +497,100 @@ infer_barcode <- function(fq,
 }
 
 
-#' Compare consensus/ASV and known sequences
+#' Compare different sequences per taxon
 #'
-#' Maps already known sequences or inconsistent ASV sequences against the consensus
-#' and creates very small BAM alignment files containing just inconsistent
-#' consensus <-> cluster sequence comparisons and consensus <-> known sequence comparisons
-#' (also useful for manual inspection)
+#' @description
+#' Aligns different sequences/haplotypes per putative taxon
+#' (if there are multiple) by mapping all of them to the first sequence
+#' (including the first sequence itself).
+#' The resulting small BAM files are useful for visual comparisons.
 #'
-#' @param data frame returned by [infer_barcode] (needs the *consensus* column).
+#' Also aligns DADA2 ASV sequences that don't match the consensus,
+#' as well as any provided 'known' sequences. For the putative taxa
+#' concerned, *all* sequences are included for comparison.
+#'
+#' Usually the first sequence within a taxon is chosen as reference,
+#' or the one matching the known sequence
+#'
+#' @param d data frame returned by [infer_barcode]
+#' (needs these columns: *taxon_num*, *consensus*, *sequence*, *is_rare*)
+#' @param bam_out path of BAM output file
+#' @param tmp_dir optional temporary directory
+#' @param known_seq optional known sequence
 #'
 #' @returns
-#' Adds a `consensus_diffs` column to `d` (NA if not compared, Inf if not mapped
-#' due to too many mismatches)
-#' TODO: ambiguous bases unfortunately lead to mismatches
+#' Returns the input data frame with the following additional columns:
+#'
+#' - `consensus_diffs`: Number of ASV/consensus differences
+#'    (NA if not compared, Inf if not mapped due to too many mismatches).
+#'    Base/ambiguity or ambiguity/ambiguity matching is also done.
+#'    Mismatches are only reported if there is no overlap between the
+#'    two (partially matching ambiguities still count as match).
+#' - `is_compare_ref`: logical indicating whether a consensus sequence was
+#'    used as reference for the comparison within a taxon
 #'
 #' @export
 compare_seqs <- function(d,
-                         bam_out = NULL,
+                         bam_out,
                          tmp_dir = NULL,
                          known_seq = NULL) {
   samtools <- get_program('samtools')
   minimap2 <- get_program('minimap2')
-  tmp_dir <- get_create_tmp_dir(tmp_dir)
   known_seq <- known_seq %||% NA
   stopifnot(length(known_seq) == 1)
-  d$known_seq_diffs <- NA_integer_
-  sel <- !is.na(d$sequence) & !d$is_rare & d$sequence != d$consensus
+
   map_seqs <- c()
+
+  # set the first sequence from each taxon as reference
+  d$is_compare_ref <- c(TRUE, diff(d$taxon_num) != 0)
+  # do comparison for all multi-sequence taxa
+  do_map <- ave(!d$is_rare, d$taxon_num, FUN = sum) > 1 & !d$is_rare
+
+  # include ASVs that are not identical to the consensus
+  # (if different or ambiguities present)
+  # (and include all other sequences as well)
+  sel <- !is.na(d$sequence) & !d$is_rare & d$sequence != d$consensus
   if (any(sel)) {
     map_seqs <- c(
       map_seqs,
       setNames(d$sequence[sel], paste0(d$full_id[sel], '_dominant_seq'))
     )
+    do_map[d$taxon_num %in% d$taxon_num[sel] & !d$is_rare] <- TRUE
   }
+
+  d$known_seq_diffs <- NA_integer_
   if (!is.na(known_seq)) {
-    sel <- rep(TRUE, nrow(d))
-    map_seqs <- c(map_seqs, setNames(known_seq, 'known_sequence'))
+    # calculate the min. number of differences (subst/InDel)
+    # for any orientation of the known sequnce
+    known_both_orient <- c(known_seq, as.character(reverse_complement(known_seq)))
+    d$known_seq_diffs[!d$is_rare] <- do.call(pmin, lapply(known_both_orient, function(s) {
+      aln <- pairwise_align(rep(s, sum(!d$is_rare)), d$consensus[!d$is_rare])
+      get_aln_stats(aln, free_end_gaps = T)[, 'diffs']
+    }))
+    best_i <- which.min(d$known_seq_diffs)
+    if (d$known_seq_diffs[best_i] > 0) {
+      # use better matching seq. as reference
+      d$is_compare_ref[d$taxon_num == d$taxon_num[best_i]] <- FALSE
+      d$is_compare_ref[best_i] <- TRUE
+      map_seqs <- c(map_seqs, setNames(known_seq, 'known_sequence'))
+      do_map[d$taxon_num == d$taxon_num[best_i] & !d$is_rare] <- TRUE
+    }
   }
-  do_cmp <- attr(d, 'has_seq_comparison') <- length(map_seqs) > 0
-  if (do_cmp) {
-    stopifnot(any(sel))
-    tmp_dir <- tmp_dir %||% tempdir()
+
+  if (any(do_map)) {
+    map_seqs <- c(
+      map_seqs,
+      setNames(d$consensus[do_map], paste0(d$full_id[do_map]))
+    )
+    refs <- setNames(d$consensus[d$is_compare_ref], d$full_id[d$is_compare_ref])
+    # paste0(gsub('_seq[0-9]+', '', d$full_id[d$is_compare_ref])))
+    tmp_dir <- get_create_tmp_dir(tmp_dir)
     seq_file <- tempfile('cmp_seq', tmp_dir, fileext = '.fasta')
     ref_file <- tempfile('cmp_ref', tmp_dir, fileext = '.fasta')
     write_dna(map_seqs, seq_file)
-    write_dna(setNames(d$consensus[sel], d$full_id[sel]), ref_file)
-    if (no_bam <- is.null(bam_out)) {
-      bam_out <- tempfile('cmp', tmp_dir, fileext = '.bam')
-    }
-    args <- c(
-      seq_file,
-      ref_file,
-      bam_out,
-      1,
-      minimap2,
-      samtools
-    )
-    sam <- run_bash_script('map_ref_simple.sh', args, stdout = TRUE)
-    if (no_bam)
-      file.remove(bam_out)
-    sam <- if (length(sam) > 0) {
-      sam <- read.delim(textConnection(sam), header = FALSE, colClasses = 'character')
-      sam[sam[[1]] == 'known_sequence',]
-    } else {
-      data.frame()
-    }
-    if (nrow(sam) == 0) {
-      if (!is.na(known_seq)) {
-        # nothing mapped -> must be large number
-        d$known_seq_diffs[1] <- Inf
-      }
-    } else {
-      stopifnot(nrow(sam) == 1)
-      dist_col <- which(grepl('NM:i:', unlist(sam), fixed=TRUE))[1]
-      stopifnot(!is.na(dist_col))
-      mapped_i <- gsub(' .*', '', d$full_id) == sam[[3]]
-      stopifnot(sum(mapped_i) == 1)
-      d$known_seq_diffs[mapped_i] <- as.integer(gsub('NM:i:', '', sam[[dist_col]]))
-    }
+    write_dna(refs, ref_file)
+    args <- c(seq_file, ref_file, bam_out, 1, minimap2, samtools)
+    run_bash_script('map_ref_simple.sh', args)
     invisible(file.remove(seq_file, ref_file))
   }
   d
@@ -894,6 +910,7 @@ subset_combine_bam <- function(out_prefix,
                                fast = FALSE,
                                write_refs = TRUE,
                                do_index = TRUE,
+                               allow_unknown = FALSE,
                                samtools = 'samtools') {
   # recursively merge large lists if necessary
   if (recursive <- length(sel_list) > chunk_size) {
@@ -941,7 +958,9 @@ subset_combine_bam <- function(out_prefix,
     stderr = TRUE,
     stdout = TRUE
   )
-  stopifnot(!grepl('invalid region or unknown reference', msg))
+  if (!isTRUE(allow_unknown)) {
+    stopifnot(!grepl('invalid region or unknown reference', msg))
+  }
   if (length(msg) > 0 && any(grepl('coordinate sort to be lost', msg, fixed = TRUE))) {
     # resort if multiple were merged (can sometimes happen)
     # https://github.com/samtools/samtools/issues/2159
