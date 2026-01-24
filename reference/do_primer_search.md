@@ -16,7 +16,7 @@ do_primer_search(
   primer_max_err = 0.2,
   idx_max_diffs = 0,
   min_barcode_length = 50,
-  cores = 1
+  cores = NULL
 )
 ```
 

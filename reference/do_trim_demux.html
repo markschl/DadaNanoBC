@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">DadaNanoBC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@
 <span>  idx_max_diffs <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  min_barcode_length <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>  error_threshold <span class="op">=</span> <span class="fl">2.5</span>,</span>
-<span>  cores <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cores <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  keep_trimmed <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -111,7 +111,13 @@ for <em>all</em> amplicons (default: 50 bp)</p></dd>
 pass the filter in (see <a href="do_demux.html">do_demux</a>). Setting it too low may remove too many
 sequences, but setting it too high may lead to noisy/errorneous results.
 The default value of 2.5 seems to work well with R10.4 data and ~0.5-1.5 kb amplicons,
-removing about half of the trimmed sequences.</p></dd>
+removing about half of the trimmed sequences.
+The value may still be adjusted based on how Figures 4 and 5 in the HTML report.</p></dd>
+
+
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Number of cores to use (default: 1, unless <code>getOption('DadaNanoBC.cores')</code>
+is defined, or the <code>DadaNanoBC_cores</code> environment variable is set)</p></dd>
 
 </dl></div>
     <div class="section level2">

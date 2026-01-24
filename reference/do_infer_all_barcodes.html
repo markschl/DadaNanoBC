@@ -11,7 +11,7 @@ frameworks can be plugged in by providing parallel_lapply_fn."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">DadaNanoBC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@ frameworks can be plugged in by providing <code>parallel_lapply_fn</code>.</p>
 <span>  tmp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  parallel_lapply_fn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  cores <span class="op">=</span> <span class="fl">1</span></span>
+<span>  cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,6 +89,19 @@ frameworks can be plugged in by providing <code>parallel_lapply_fn</code>.</p>
 <dt id="arg-tmp-dir">tmp_dir<a class="anchor" aria-label="anchor" href="#arg-tmp-dir"></a></dt>
 <dd><p>Optional temporary directory
 (default: user-specific temporary directory, see <a href="set_global_opts.html">set_global_opts</a>)</p></dd>
+
+
+<dt id="arg-parallel-lapply-fn">parallel_lapply_fn<a class="anchor" aria-label="anchor" href="#arg-parallel-lapply-fn"></a></dt>
+<dd><p>Optional lapply-like function</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>passed to <a href="infer_barcode.html">infer_barcode</a></p></dd>
+
+
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Number of cores to use (default: 1, unless <code>getOption('DadaNanoBC.cores')</code>
+is defined, or the <code>DadaNanoBC_cores</code> environment variable is set)</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -11,13 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/markschl/DadaNanoBC/blob/main/DESCRIPTION)
 
 Schlegel M (2026). *DadaNanoBC: DADA2-Based Pipeline for Infering DNA
-Barcodes from Nanopore Sequence Data*. R package version 0.1.0,
+Barcodes from Nanopore Sequence Data*. R package version 0.1.1,
 <https://github.com/markschl/DadaNanoBC>.
 
     @Manual{,
       title = {DadaNanoBC: DADA2-Based Pipeline for Infering DNA Barcodes from Nanopore Sequence Data},
       author = {Markus Schlegel},
       year = {2026},
-      note = {R package version 0.1.0},
+      note = {R package version 0.1.1},
       url = {https://github.com/markschl/DadaNanoBC},
     }

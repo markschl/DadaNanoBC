@@ -10,7 +10,7 @@ sequence(s). Further groups the resulting sequences by putative taxon.
 infer_barcode(
   fq,
   dada_err,
-  alignment_prefix,
+  alignment_prefix = NULL,
   id_prefix = NULL,
   tmp_dir = NULL,
   dada_omega_a = c(1e-20, 1e-10, 0.01),
@@ -23,7 +23,7 @@ infer_barcode(
   consensus_threshold = 0.65,
   consensus_by_qual = TRUE,
   homopoly_fix_min_ident = 4,
-  min_homopoly_len = 6,
+  homopoly_fix_minlen = 6,
   fixed_cluster_threshold = 0.97,
   taxa_cluster_threshold = fixed_cluster_threshold,
   cluster_single_linkage = TRUE,
@@ -132,7 +132,7 @@ infer_barcode(
   ambiguous homopolymer sequences in the consensus. The homopolymer run
   length of the most frequent sequence is chosen.
 
-- min_homopoly_len:
+- homopoly_fix_minlen:
 
   Minimum length a homopolymer region needs to have in order to attempt
   "fixing" an ambiguous consensus in that region (see also

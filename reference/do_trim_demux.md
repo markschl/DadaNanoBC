@@ -18,7 +18,7 @@ do_trim_demux(
   idx_max_diffs = 0,
   min_barcode_length = 50,
   error_threshold = 2.5,
-  cores = 1,
+  cores = NULL,
   keep_trimmed = FALSE
 )
 ```
@@ -71,7 +71,14 @@ do_trim_demux(
   Setting it too low may remove too many sequences, but setting it too
   high may lead to noisy/errorneous results. The default value of 2.5
   seems to work well with R10.4 data and ~0.5-1.5 kb amplicons, removing
-  about half of the trimmed sequences.
+  about half of the trimmed sequences. The value may still be adjusted
+  based on how Figures 4 and 5 in the HTML report.
+
+- cores:
+
+  Number of cores to use (default: 1, unless
+  `getOption('DadaNanoBC.cores')` is defined, or the `DadaNanoBC_cores`
+  environment variable is set)
 
 ## Value
 

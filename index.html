@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">DadaNanoBC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -156,7 +156,7 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">targets</span><span class="fu">::</span><span class="fu">tar_make</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
-<p><em>Optional</em>: Modify the number of parallel processes before calling <code>tar_make</code>: <code>Sys.setenv('DadaNanoBC_WORKERS' = 8)</code></p>
+<p><em>Optional</em>: Modify the number of parallel processes before calling <code>tar_make</code>: <code>Sys.setenv('DadaNanoBC_cores' = 8)</code></p>
 </blockquote>
 <div class="section level3">
 <h3 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a>
@@ -201,9 +201,9 @@
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'DadaNanoBC::init_pipeline(bash = TRUE)'</span></span></code></pre></div>
 <p>Then make sure there are the files <code>meta.xlsx</code>, <code>reads.fastq.gz</code> and <code>config.yaml</code> present in the analysis directory as described <a href="#running-the-targets-pipeline">above</a>.</p>
 <p>Run the pipeline (for the default <em>analysis</em> directory, may be <a href="#running-a-different-analysis">changed</a>):</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">./infer_barcodes</span> analysis</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">./infer_barcodes</span></span></code></pre></div>
 <p>Additional settings can be added, as in this more complicated/realistic example (see also <a href="#custom-program-location">custom program location</a>):</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">./infer_barcodes</span> WORKERS=8 vsearch=path/to/vsearch</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">./infer_barcodes</span> cores=8 vsearch=path/to/vsearch</span></code></pre></div>
 <p><a href="#running-a-different-analysis">Different analysis</a> in another directory:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="ex">./infer_barcodes</span> ANALYSIS_DIR=path/to/analysis</span></code></pre></div>
 </div>

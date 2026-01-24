@@ -5,7 +5,7 @@ Attempt at "fixing" the consensus sequence in a homopolymer region
 ## Usage
 
 ``` r
-fix_homopolymers(cons_seq, ref_seq, min_homopoly_len = 6)
+fix_homopolymers(cons_seq, ref_seq, homopoly_minlen = 6)
 ```
 
 ## Arguments
@@ -19,7 +19,7 @@ fix_homopolymers(cons_seq, ref_seq, min_homopoly_len = 6)
   the reference sequence (there should be some confidence that it is
   correct)
 
-- min_homopoly_len:
+- homopoly_minlen:
 
   minimum homopolymer length to check and fix
 

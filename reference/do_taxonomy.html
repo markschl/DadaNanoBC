@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">DadaNanoBC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@
 <span>  known_contaminants <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  likely_kingdom <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  contam_rank_delta <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  cores <span class="op">=</span> <span class="fl">1</span></span>
+<span>  cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">do_assign_taxonomy</span><span class="op">(</span></span>
@@ -75,7 +75,7 @@
 <span>  tmp_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  confidence_threshold <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>  summary_ranks <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cores <span class="op">=</span> <span class="fl">1</span></span>
+<span>  cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">do_compare_taxonomy</span><span class="op">(</span></span>
@@ -138,6 +138,11 @@ This setting affects the "sensitivity" of the contaminant detection
 (lower: more sensitive, but also more false classifications,
 higher: some contamination may not be recognized).
 The default of 3 seems to work well in most cases.</p></dd>
+
+
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Number of cores to use (default: 1, unless <code>getOption('DadaNanoBC.cores')</code>
+is defined, or the <code>DadaNanoBC_cores</code> environment variable is set)</p></dd>
 
 </dl></div>
     <div class="section level2">

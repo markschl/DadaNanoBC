@@ -7,7 +7,7 @@
 - [`check_system_requirements()`](https://markschl.github.io/DadaNanoBC/reference/check_system_requirements.md)
   : Check external software requirements and report missing programs
 - [`compare_seqs()`](https://markschl.github.io/DadaNanoBC/reference/compare_seqs.md)
-  : Compare consensus/ASV and known sequences
+  : Compare different sequences per taxon
 - [`create_excel_report()`](https://markschl.github.io/DadaNanoBC/reference/create_excel_report.md)
   : Create an Excel report
 - [`dada2_denoise()`](https://markschl.github.io/DadaNanoBC/reference/dada2_denoise.md)

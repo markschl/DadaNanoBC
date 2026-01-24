@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">DadaNanoBC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,7 +53,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">do_combine_alignments</span><span class="op">(</span><span class="va">seq_tab</span>, <span class="va">aln_dir</span>, <span class="va">outdir</span>, top_only <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">do_combine_alignments</span><span class="op">(</span><span class="va">seq_tab</span>, <span class="va">aln_dir</span>, <span class="va">outdir</span>, top_only <span class="op">=</span> <span class="cn">FALSE</span>, cores <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,6 +66,15 @@
 
 <dt id="arg-aln-dir">aln_dir<a class="anchor" aria-label="anchor" href="#arg-aln-dir"></a></dt>
 <dd><p>Alignment directory (as provided to <a href="do_infer_all_barcodes.html">do_infer_all_barcodes</a>)</p></dd>
+
+
+<dt id="arg-top-only">top_only<a class="anchor" aria-label="anchor" href="#arg-top-only"></a></dt>
+<dd><p>include only the top taxon</p></dd>
+
+
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Number of cores to use (default: 1, unless <code>getOption('DadaNanoBC.cores')</code>
+is defined, or the <code>DadaNanoBC_cores</code> environment variable is set)</p></dd>
 
 
 <dt id="arg-out-prefix">out_prefix<a class="anchor" aria-label="anchor" href="#arg-out-prefix"></a></dt>

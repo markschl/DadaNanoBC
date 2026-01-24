@@ -106,15 +106,11 @@ representative sequence (ASV or dominant unique sequence) with
 
 The consensus sequence is then obtained with [samtools
 consensus](https://www.htslib.org/doc/samtools-consensus.html) using a
-simple **frequency-based** approach. No elaborate neural network-based
-inference (see e.g. [Medaka](https://github.com/nanoporetech/medaka)) is
-currently applied.
-
-By default, each base in the consensus sequence needs to be supported by
-at least 65% of the reads (weighted by quality scores) to be
-*unambiguous*. Otherwise, an [ambiguous
-base](https://en.wikipedia.org/wiki/Nucleic_acid_notation) is shown,
-which may indicate unresolved sequence variation.
+simple **frequency-based** approach. By default, each base in the
+consensus sequence needs to be supported by at least 65% of the reads
+(weighted by quality scores) to be *unambiguous*. Otherwise, an
+[ambiguous base](https://en.wikipedia.org/wiki/Nucleic_acid_notation) is
+shown, which may indicate unresolved sequence variation.
 
 The correctness of the consensus is further ensured by re-mapping the
 reads against the consensus sequence. If necessary, this step is
@@ -126,6 +122,15 @@ The *final reported sequence* is always the consensus sequence (see also
 If the barcode sample has a sufficient read depth and sequencing
 quality, it should usually be unambiguous and correct. For low-depth
 samples with ambiguities, alignments might be inspected manually.
+
+#### Possible issues
+
+Usually, there is a good agreement between sequencing reads, and a
+simple frequency-based approach seems sufficient. No elaborate neural
+network-based inference (see
+e.g. [Medaka](https://github.com/nanoporetech/medaka)) is currently
+applied. In **repetitive regions**, the current method may have a hard
+time determining the exact number of repeats.
 
 #### Homopolymers
 

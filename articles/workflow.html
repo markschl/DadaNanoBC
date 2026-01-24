@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">DadaNanoBC</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -176,10 +176,8 @@ clustering, the raw (quality-filtered) reads are aligned to the
 representative sequence (ASV or dominant unique sequence) with <a href="https://lh3.github.io/minimap2" class="external-link">Minimap2</a>.</p>
 <p>The consensus sequence is then obtained with <a href="https://www.htslib.org/doc/samtools-consensus.html" class="external-link">samtools
 consensus</a> using a simple <strong>frequency-based</strong> approach.
-No elaborate neural network-based inference (see e.g. <a href="https://github.com/nanoporetech/medaka" class="external-link">Medaka</a>) is currently
-applied.</p>
-<p>By default, each base in the consensus sequence needs to be supported
-by at least 65% of the reads (weighted by quality scores) to be
+By default, each base in the consensus sequence needs to be supported by
+at least 65% of the reads (weighted by quality scores) to be
 <em>unambiguous</em>. Otherwise, an <a href="https://en.wikipedia.org/wiki/Nucleic_acid_notation" class="external-link">ambiguous
 base</a> is shown, which may indicate unresolved sequence variation.</p>
 <p>The correctness of the consensus is further ensured by re-mapping the
@@ -191,6 +189,15 @@ two successive rounds.</p>
 a sufficient read depth and sequencing quality, it should usually be
 unambiguous and correct. For low-depth samples with ambiguities,
 alignments might be inspected manually.</p>
+<div class="section level4">
+<h4 id="possible-issues">Possible issues<a class="anchor" aria-label="anchor" href="#possible-issues"></a>
+</h4>
+<p>Usually, there is a good agreement between sequencing reads, and a
+simple frequency-based approach seems sufficient. No elaborate neural
+network-based inference (see e.g. <a href="https://github.com/nanoporetech/medaka" class="external-link">Medaka</a>) is currently
+applied. In <strong>repetitive regions</strong>, the current method may
+have a hard time determining the exact number of repeats.</p>
+</div>
 <div class="section level4">
 <h4 id="homopolymers">Homopolymers<a class="anchor" aria-label="anchor" href="#homopolymers"></a>
 </h4>

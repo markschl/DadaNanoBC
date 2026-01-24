@@ -18,7 +18,7 @@ do_infer_all_barcodes(
   tmp_dir = NULL,
   parallel_lapply_fn = NULL,
   ...,
-  cores = 1
+  cores = NULL
 )
 ```
 
@@ -45,6 +45,21 @@ do_infer_all_barcodes(
   Optional temporary directory (default: user-specific temporary
   directory, see
   [set_global_opts](https://markschl.github.io/DadaNanoBC/reference/set_global_opts.md))
+
+- parallel_lapply_fn:
+
+  Optional lapply-like function
+
+- ...:
+
+  passed to
+  [infer_barcode](https://markschl.github.io/DadaNanoBC/reference/infer_barcode.md)
+
+- cores:
+
+  Number of cores to use (default: 1, unless
+  `getOption('DadaNanoBC.cores')` is defined, or the `DadaNanoBC_cores`
+  environment variable is set)
 
 ## Value
 
