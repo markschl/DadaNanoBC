@@ -99,29 +99,30 @@ inspected.
 
 ### How is the consensus sequence determined?
 
-After DADA2 denoising, haplotype splitting and fixed-threshold
-clustering, the raw (quality-filtered) reads are aligned to the
-representative sequence (ASV or dominant unique sequence) with
-[Minimap2](https://lh3.github.io/minimap2).
-
-The consensus sequence is then obtained with [samtools
-consensus](https://www.htslib.org/doc/samtools-consensus.html) using a
-simple **frequency-based** approach. By default, each base in the
-consensus sequence needs to be supported by at least 65% of the reads
-(weighted by quality scores) to be *unambiguous*. Otherwise, an
-[ambiguous base](https://en.wikipedia.org/wiki/Nucleic_acid_notation) is
-shown, which may indicate unresolved sequence variation.
-
-The correctness of the consensus is further ensured by re-mapping the
-reads against the consensus sequence. If necessary, this step is
-repeated until *samtools consensus* returns the same sequence in two
-successive rounds.
-
-The *final reported sequence* is always the consensus sequence (see also
+The *final reported sequence* is always the consensus sequence of all
+reads in a cluster (see also
 [`vignette("curation")`](https://markschl.github.io/DadaNanoBC/articles/curation.md)).
 If the barcode sample has a sufficient read depth and sequencing
 quality, it should usually be unambiguous and correct. For low-depth
 samples with ambiguities, alignments might be inspected manually.
+
+After DADA2 denoising, haplotype splitting and fixed-threshold
+clustering, the raw (quality-filtered) reads are first aligned to the
+representative sequence (ASV or dominant unique sequence) with
+[Minimap2](https://lh3.github.io/minimap2). The consensus sequence is
+then obtained with [samtools
+consensus](https://www.htslib.org/doc/samtools-consensus.html) using a
+simple **frequency-based** approach. By default, each base in the
+consensus needs to be supported by at least 65% of the reads (frequency
+weighted by quality scores). The presence of two-letter [ambiguity
+coes](https://en.wikipedia.org/wiki/Nucleic_acid_notation) indicates
+potentiall unresolved sequence variation, while *N*s in the consensus
+indicate the possible presence of rare but non-neglectable subsitutions
+or InDels.
+
+The quality of the consensus is further ensured by re-mapping the reads
+against the consensus sequence repeatedly as long as there are
+inconsistencies between successive rounds.
 
 #### Possible issues
 

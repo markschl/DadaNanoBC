@@ -43,7 +43,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Attempt at "fixing" the consensus sequence in a homopolymer region</h1>
-      <small class="dont-index">Source: <a href="https://github.com/markschl/DadaNanoBC/blob/v0.1.1/R/cluster.R" class="external-link"><code>R/cluster.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/markschl/DadaNanoBC/blob/main/R/cluster.R" class="external-link"><code>R/cluster.R</code></a></small>
       <div class="d-none name"><code>fix_homopolymers.Rd</code></div>
     </div>
 
@@ -81,14 +81,18 @@ that it is correct)</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Resolves N-ambiguities in the consensus if surrounded by a homopolymer stretch,
-replacing them with the corresponding reference sequence
-(which is assumed to be the most likely true sequence)</p>
+replacing them with the corresponding reference sequence.
+This sequence is assumed to be the most likely true sequence,
+following the concept of DADA2, which is also based on the assumption
+that there are at least a few error-free reads present.
+It is clear that this might not be true in <em>all</em> cases if there are
+very long homopolymer stretches present.</p>
 <p>Ns are usually found on the left side (or near it), as minimap2 tends to
 left-align gaps, and if there is an ambiguous situation (base + gap), the
-consensus becomes an N.</p><ol><li><p>A consensus/reference pairwise alignment is done</p></li>
+consensus becomes an N.</p><ol><li><p>A consensus/reference pairwise alignment is done with DECIPHER</p></li>
 <li><p>The leftmost N is identified</p></li>
-<li><p>The first non-N base downstream (right) of this N is assumed to be
-the repeated base (likely true if gaps are left-aligned).
+<li><p>The first non-N base downstream (right) is assumed to be
+the repeated base (usually true if gaps are left-aligned).
 Jump to 7. if none is found.</p></li>
 <li><p>The longest stretch of the given base/N/gaps is searched in the aligned
 consensus</p></li>

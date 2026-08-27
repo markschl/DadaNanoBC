@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/markschl/DadaNanoBC/blob/v0.1.1/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/markschl/DadaNanoBC/blob/main/DESCRIPTION)
 
 Schlegel M (2026). *DadaNanoBC: DADA2-Based Pipeline for Infering DNA
 Barcodes from Nanopore Sequence Data*. R package version 0.1.1,

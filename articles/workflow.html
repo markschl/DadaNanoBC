@@ -71,7 +71,7 @@
       <h1>Workflow steps</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/markschl/DadaNanoBC/blob/v0.1.1/vignettes/workflow.Rmd" class="external-link"><code>vignettes/workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/markschl/DadaNanoBC/blob/main/vignettes/workflow.Rmd" class="external-link"><code>vignettes/workflow.Rmd</code></a></small>
       <div class="d-none name"><code>workflow.Rmd</code></div>
     </div>
 
@@ -171,24 +171,25 @@ sequence, which can still be manually inspected.</p>
 <div class="section level3">
 <h3 id="how-is-the-consensus-sequence-determined">How is the consensus sequence determined?<a class="anchor" aria-label="anchor" href="#how-is-the-consensus-sequence-determined"></a>
 </h3>
-<p>After DADA2 denoising, haplotype splitting and fixed-threshold
-clustering, the raw (quality-filtered) reads are aligned to the
-representative sequence (ASV or dominant unique sequence) with <a href="https://lh3.github.io/minimap2" class="external-link">Minimap2</a>.</p>
-<p>The consensus sequence is then obtained with <a href="https://www.htslib.org/doc/samtools-consensus.html" class="external-link">samtools
-consensus</a> using a simple <strong>frequency-based</strong> approach.
-By default, each base in the consensus sequence needs to be supported by
-at least 65% of the reads (weighted by quality scores) to be
-<em>unambiguous</em>. Otherwise, an <a href="https://en.wikipedia.org/wiki/Nucleic_acid_notation" class="external-link">ambiguous
-base</a> is shown, which may indicate unresolved sequence variation.</p>
-<p>The correctness of the consensus is further ensured by re-mapping the
-reads against the consensus sequence. If necessary, this step is
-repeated until <em>samtools consensus</em> returns the same sequence in
-two successive rounds.</p>
 <p>The <em>final reported sequence</em> is always the consensus sequence
-(see also <code><a href="../articles/curation.html">vignette("curation")</a></code>). If the barcode sample has
-a sufficient read depth and sequencing quality, it should usually be
-unambiguous and correct. For low-depth samples with ambiguities,
-alignments might be inspected manually.</p>
+of all reads in a cluster (see also <code><a href="../articles/curation.html">vignette("curation")</a></code>).
+If the barcode sample has a sufficient read depth and sequencing
+quality, it should usually be unambiguous and correct. For low-depth
+samples with ambiguities, alignments might be inspected manually.</p>
+<p>After DADA2 denoising, haplotype splitting and fixed-threshold
+clustering, the raw (quality-filtered) reads are first aligned to the
+representative sequence (ASV or dominant unique sequence) with <a href="https://lh3.github.io/minimap2" class="external-link">Minimap2</a>. The consensus
+sequence is then obtained with <a href="https://www.htslib.org/doc/samtools-consensus.html" class="external-link">samtools
+consensus</a> using a simple <strong>frequency-based</strong> approach.
+By default, each base in the consensus needs to be supported by at least
+65% of the reads (frequency weighted by quality scores). The presence of
+two-letter <a href="https://en.wikipedia.org/wiki/Nucleic_acid_notation" class="external-link">ambiguity
+coes</a> indicates potentiall unresolved sequence variation, while
+<em>N</em>s in the consensus indicate the possible presence of rare but
+non-neglectable subsitutions or InDels.</p>
+<p>The quality of the consensus is further ensured by re-mapping the
+reads against the consensus sequence repeatedly as long as there are
+inconsistencies between successive rounds.</p>
 <div class="section level4">
 <h4 id="possible-issues">Possible issues<a class="anchor" aria-label="anchor" href="#possible-issues"></a>
 </h4>

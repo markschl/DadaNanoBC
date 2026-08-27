@@ -21,6 +21,7 @@ infer_barcode(
   max_sample_depth = 5000,
   consensus_max_depth = 3000,
   consensus_threshold = 0.65,
+  consensus_het_fract = 0.5,
   consensus_by_qual = TRUE,
   homopoly_fix_min_ident = 4,
   homopoly_fix_minlen = 6,
@@ -114,9 +115,24 @@ infer_barcode(
 
 - consensus_threshold:
 
-  require at least the given proportion of bases to be identical at
-  every alignment column for an unambiguous consensus call (values below
-  the default 60% might be problematic)
+  Require a consensus base to be supported by at least least the given
+  proportion of bases. to be *identical* at every alignment column for
+  an unambiguous consensus call. Proportions are additionally modified
+  by quality scores if `consensus_by_qual` is `TRUE` (the default).
+  Threshold values \<0.6 are not allowed, since due to an increased risk
+  of for errors in the consensus sequences. The consensus may contain
+  two-letter ambiguities or *N* if there are multiple variants and/or
+  gaps present (see `consensus_het_fract`)
+
+- consensus_het_fract:
+
+  The consensus calling algorithm returns a two-letter IUPAC ambiguity
+  code (one of *RYSWKM*) if alignment columns have a second letter with
+  high enough abundance relative to the most abundant letter; the ratio
+  must be at least `consensus_het_fract`. Their combined frequency of
+  the two letters must reach `consensus_threshold`, otherwise *N* is
+  returned. Rare InDels (base frequency \< `consensus_threshold`) are
+  also represented by *N*.
 
 - consensus_by_qual:
 
