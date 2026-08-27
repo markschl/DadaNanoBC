@@ -464,14 +464,15 @@ infer_barcode <- function(fq,
   # Finally: assign intuitively understandable names to sequences
   orig_id <- d$id
   d$id <- paste0('taxon', d$taxon_num)
-  sel <- ave(!d$is_rare, d$taxon_num, FUN=sum) > 1
+  sel <- !d$is_rare & ave(!d$is_rare, d$taxon_num, FUN=sum) > 1
   d$id[sel] <- sprintf(
     '%s_seq%s',
     d$id[sel],
     ave(d$id[sel], d$taxon_num[sel], FUN=seq_along)
   )
+  # add '_rareN' suffix
   d$id[d$is_rare] <- sprintf(
-    '%s_rare_seq%s',
+    '%s_rare%s',
     d$id[d$is_rare],
     ave(d$id[d$is_rare], d$taxon_num[d$is_rare], FUN=seq_along)
   )
