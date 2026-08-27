@@ -73,6 +73,7 @@ support (details
 ## Installing and using the package
 
 ``` r
+
 devtools::install_github("markschl/DadaNanoBC")
 ```
 
@@ -94,6 +95,7 @@ In the `R` console (for running in *Bash*, see
 [below](#running-in-the-bash-console)):
 
 ``` r
+
 setwd("path/to/pipeline")
 DadaNanoBC::init_pipeline()
 ```
@@ -127,6 +129,7 @@ Next:
 Run the pipeline:
 
 ``` r
+
 targets::tar_make()
 ```
 
@@ -172,6 +175,7 @@ analysis. Taxonomic databases and other files in the *taxdb* directory
 is reused.
 
 ``` r
+
 Sys.setenv('DadaNanoBC_ANALYSIS_DIR' = 'path/to/dir')
 targets::tar_make()
 ```
@@ -234,6 +238,7 @@ checks for available software and gives the URLs of missing software.
 The following does the same:
 
 ``` r
+
 DadaNanoBC::check_system_requirements()
 ```
 
@@ -275,6 +280,7 @@ the paths can be communicated to DadaNanoBC.
 In R (example with VSEARCH):
 
 ``` r
+
 DadaNanoBC::set_global_opts(vsearch = '~/Downloads/vsearch-2.30.2-linux-x86_64/bin/vsearch')
 tar_make()
 ```

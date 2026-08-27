@@ -13,13 +13,13 @@ buffer (10 mM Tris-HCl, pH 8.5).
 Using the [GoTaq G2 hot-start green master
 mix](https://promega.com/products/pcr/taq-polymerase/gotaq-g2-hot-start-master-mixes).
 
-| Component  | original conc. | target conc. | one reaction | master mix (442 rxn = 4 x 96 + 15%) |
-|------------|----------------|--------------|--------------|-------------------------------------|
-| Master Mix | 2x             | 1x           | 5 µl         | 2210 µl                             |
-| Primer mix | 5 µM (each)    | 0.5 µM       | 2 µl         |                                     |
-| DNA        |                |              | 1 µl         |                                     |
-| water      |                |              | 2 µl         | 884 µl                              |
-| total      |                |              | 10 µl        | 3094 µl                             |
+| Component | original conc. | target conc. | one reaction | master mix (442 rxn = 4 x 96 + 15%) |
+|----|----|----|----|----|
+| Master Mix | 2x | 1x | 5 µl | 2210 µl |
+| Primer mix | 5 µM (each) | 0.5 µM | 2 µl |  |
+| DNA |  |  | 1 µl |  |
+| water |  |  | 2 µl | 884 µl |
+| total |  |  | 10 µl | 3094 µl |
 
 First, distribute 7 µl to each well, then add 2 µl forward + reverse
 primers and 1 µl DNA separately.

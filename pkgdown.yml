@@ -1,5 +1,5 @@
-pandoc: 3.1.11
-pkgdown: 2.2.0
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   basecalling: basecalling.html
@@ -7,7 +7,7 @@ articles:
   lab: lab.html
   primers: primers.html
   workflow: workflow.html
-last_built: 2026-01-24T19:53Z
+last_built: 2026-08-27T09:39Z
 urls:
   reference: https://markschl.github.io/DadaNanoBC/reference
   article: https://markschl.github.io/DadaNanoBC/articles
