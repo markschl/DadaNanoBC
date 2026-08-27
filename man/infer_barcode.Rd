@@ -18,6 +18,7 @@ infer_barcode(
   max_sample_depth = 5000,
   consensus_max_depth = 3000,
   consensus_threshold = 0.65,
+  consensus_het_fract = 0.5,
   consensus_by_qual = TRUE,
   homopoly_fix_min_ident = 4,
   homopoly_fix_minlen = 6,
@@ -80,9 +81,24 @@ from the input file (\code{fq}) for the denoising/clustering}
 clusters to infer the consensus sequence (if there are more, a random sample
 is taken)}
 
-\item{consensus_threshold}{require at least the given proportion of bases
-to be identical at every alignment column for an unambiguous consensus call
-(values below the default 60\% might be problematic)}
+\item{consensus_threshold}{Require a consensus base to be supported by at least
+least the given proportion of bases.
+to be \emph{identical} at every alignment column for an unambiguous consensus call.
+Proportions are additionally modified by quality scores if \code{consensus_by_qual}
+is \code{TRUE} (the default).
+Threshold values <0.6 are not allowed, since due to an increased risk of
+for errors in the consensus sequences.
+The consensus may contain two-letter ambiguities or \emph{N} if there are
+multiple variants and/or gaps present (see \code{consensus_het_fract})}
+
+\item{consensus_het_fract}{The consensus calling algorithm returns a
+two-letter IUPAC ambiguity code (one of \emph{RYSWKM}) if alignment columns
+have a second letter with high enough abundance relative to the most
+abundant letter; the ratio must be at least \code{consensus_het_fract}.
+Their combined frequency of the two letters must reach
+\code{consensus_threshold}, otherwise \emph{N} is returned.
+Rare InDels (base frequency < \code{consensus_threshold}) are also represented
+by \emph{N}.}
 
 \item{consensus_by_qual}{Consider the read quality scores when building the
 consensus with \href{https://www.htslib.org/doc/samtools-consensus.html}{samtools consensus}.

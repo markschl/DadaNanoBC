@@ -45,9 +45,23 @@
 #' @param consensus_max_depth maximum number sequences mapped against the
 #'    clusters to infer the consensus sequence (if there are more, a random sample
 #'    is taken)
-#' @param consensus_threshold require at least the given proportion of bases
-#'    to be identical at every alignment column for an unambiguous consensus call
-#'    (values below the default 60% might be problematic)
+#' @param consensus_threshold Require a consensus base to be supported by at least
+#'    least the given proportion of bases.
+#'    to be *identical* at every alignment column for an unambiguous consensus call.
+#'    Proportions are additionally modified by quality scores if `consensus_by_qual`
+#'    is `TRUE` (the default).
+#'    Threshold values <0.6 are not allowed, since due to an increased risk of
+#'    for errors in the consensus sequences.
+#'    The consensus may contain two-letter ambiguities or *N* if there are
+#'    multiple variants and/or gaps present (see `consensus_het_fract`)
+#' @param consensus_het_fract The consensus calling algorithm returns a
+#'    two-letter IUPAC ambiguity code (one of *RYSWKM*) if alignment columns
+#'    have a second letter with high enough abundance relative to the most
+#'    abundant letter; the ratio must be at least `consensus_het_fract`.
+#'    Their combined frequency of the two letters must reach
+#'    `consensus_threshold`, otherwise *N* is returned.
+#'    Rare InDels (base frequency < `consensus_threshold`) are also represented
+#'    by *N*.
 #' @param consensus_by_qual Consider the read quality scores when building the
 #'    consensus with [samtools consensus](https://www.htslib.org/doc/samtools-consensus.html).
 #'    If `TRUE`, the relative base frequencies are weighted by the Phred quality scores.
@@ -117,6 +131,7 @@ infer_barcode <- function(fq,
                           max_sample_depth = 5000,
                           consensus_max_depth = 3000,
                           consensus_threshold = 0.65,
+                          consensus_het_fract = 0.5,
                           consensus_by_qual = TRUE,
                           homopoly_fix_min_ident = 4,
                           homopoly_fix_minlen = 6,
@@ -225,8 +240,9 @@ infer_barcode <- function(fq,
         sel_reads,
         ref_seq,
         out_prefix = round_prefix,
-        consensus_threshold = consensus_threshold,
-        consensus_by_qual = consensus_by_qual,
+        threshold = consensus_threshold,
+        het_fract = consensus_het_fract,
+        use_qual = consensus_by_qual,
         homopoly_fix = d$max_identical >= dada_min_identical,
         homopoly_fix_minlen = homopoly_fix_minlen,
         fast = TRUE,
@@ -272,6 +288,7 @@ infer_barcode <- function(fq,
           max_ratio = max_split_ratio,
           consensus_threshold = consensus_threshold,
           consensus_by_qual = consensus_by_qual,
+          consensus_het_fract = consensus_het_fract,
           homopoly_fix_minlen = homopoly_fix_minlen,
           fast = TRUE,
           cores = cores,
@@ -401,8 +418,9 @@ infer_barcode <- function(fq,
         sel_reads,
         ref_seq,
         out_prefix = remap_prefix,
-        consensus_threshold = consensus_threshold,
-        consensus_by_qual = consensus_by_qual,
+        threshold = consensus_threshold,
+        het_fract = consensus_het_fract,
+        use_qual = consensus_by_qual,
         homopoly_fix = d.sel$max_identical[remap_cons] >= dada_min_identical,
         homopoly_fix_minlen = homopoly_fix_minlen,
         fast = !all(remap_cons),
@@ -752,6 +770,9 @@ try_split_haplotypes <- function(reads,
                                  max_ratio = 3,
                                  fast = FALSE,
                                  cores = 1,
+                                 consensus_threshold = 0.65,
+                                 consensus_het_fract = 0.5,
+                                 consensus_by_qual = TRUE,
                                  ...,
                                  samtools = 'samtools',
                                  minimap2 = 'minimap2',
@@ -790,6 +811,9 @@ try_split_haplotypes <- function(reads,
       sel_reads,
       ref_seq ,
       out_prefix = prefix_split,
+      threshold = consensus_threshold,
+      het_fract = consensus_het_fract,
+      use_qual = consensus_by_qual,
       homopoly_fix = TRUE,
       fast = fast,
       cores = cores,
@@ -1055,18 +1079,36 @@ rename_bam_refs <- function(prefix,
   }
 }
 
-# Map reads against references and infer a consensus sequence
+# Map reads against references using Minimap2 and infer a consensus sequence
+# using 'samtools consensus'
+#
+# Important settings (https://www.htslib.org/doc/samtools-consensus.html):
+# consensus_threshold -> call-fract
+# het_fract -> het-fract
+# use_qual -> --use-qual
+#
+# If homopoly_fix is TRUE, homopolymer regions with an ambiguous consensus
+# and >= homopoly_fix_minlen length are "fixed" by using the repeat number
+# from the most abundant unique sequence.
 ambig_consensus <- function(seqs,
                             ref_seq,
                             out_prefix,
-                            consensus_threshold = 0.65,
-                            consensus_by_qual = TRUE,
+                            threshold = 0.65,
+                            het_fract = 0.4,
+                            use_qual = TRUE,
                             fast = FALSE,
                             homopoly_fix = FALSE,
                             homopoly_fix_minlen = 6,
                             cores = 1,
                             minimap2 = 'minimap2',
                             samtools = 'samtools') {
+  if (threshold < 0.6) {
+    stop('Consensus thresholds < 0.6 are not allowed')
+  }
+  if (het_fract < 0.2) {
+    stop('Consensus het-fract < 0.2 is problematic')
+  }
+
   # write reference and reads to file
   ref_file <- paste0(out_prefix, '.fasta')
   reads_file <- paste0(out_prefix, '_seqs.fastq')
@@ -1085,13 +1127,16 @@ ambig_consensus <- function(seqs,
     minimap2,
     samtools,
     '-m', 'simple',
-    '-c', consensus_threshold,
+    '--ambig',
+    '-c', threshold,
+    '--het-fract', het_fract,
     # extra treatment for homopolymers: lower confidence
-    if (consensus_by_qual) {
+    if (use_qual) {
       c(
         '--use-qual',
         '--homopoly-fix',
         '--homopoly-score', '0.3',
+        # TODO: hard-coded to R10.4 sup -> not tested if that works for PacBio
         '--qual-calibration', ':r10.4_sup'
       )
     } else {
@@ -1104,9 +1149,13 @@ ambig_consensus <- function(seqs,
   cons_out <- paste0(out_prefix, '_consensus.fasta')
   invisible(file.remove(reads_file))
   # invisible(file.remove(ref_file))
+  cons <- as.character(Biostrings::readBStringSet(cons_out))[names(ref_seq)]
+  # important: convert lower-case bases representing potential half-present
+  # InDels to Ns (see samtools consensus docs for het-fract)
+  cons <- stringr::str_replace_all(cons, '[a-z]+', 'N')
   out <- data.frame(
     row.names = names(ref_seq),
-    consensus = as.character(read_dna(cons_out))[names(ref_seq)],
+    consensus = cons,
     n_mapped = parse_idxstats(stats)[names(ref_seq)],
     homopolymer_adjustments = 0,
     consensus_diffs = 0
@@ -1162,17 +1211,21 @@ ambig_consensus <- function(seqs,
 #'
 #' @details
 #' Resolves N-ambiguities in the consensus if surrounded by a homopolymer stretch,
-#' replacing them with the corresponding reference sequence
-#' (which is assumed to be the most likely true sequence)
+#' replacing them with the corresponding reference sequence.
+#' This sequence is assumed to be the most likely true sequence,
+#' following the concept of DADA2, which is also based on the assumption
+#' that there are at least a few error-free reads present.
+#' It is clear that this might not be true in *all* cases if there are
+#' very long homopolymer stretches present.
 #'
 #' Ns are usually found on the left side (or near it), as minimap2 tends to
 #' left-align gaps, and if there is an ambiguous situation (base + gap), the
 #' consensus becomes an N.
 #'
-#' 1. A consensus/reference pairwise alignment is done
+#' 1. A consensus/reference pairwise alignment is done with DECIPHER
 #' 2. The leftmost N is identified
-#' 3. The first non-N base downstream (right) of this N is assumed to be
-#'    the repeated base (likely true if gaps are left-aligned).
+#' 3. The first non-N base downstream (right) is assumed to be
+#'    the repeated base (usually true if gaps are left-aligned).
 #'    Jump to 7. if none is found.
 #' 4. The longest stretch of the given base/N/gaps is searched in the aligned
 #'    consensus

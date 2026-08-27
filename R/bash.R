@@ -29,6 +29,7 @@ run_bash <- function(cmd, stdout = '', stderr = '', ...) {
 run_bash_script <- function(script, args, ...) {
   script <- system.file('bash_scripts', script, package = 'DadaNanoBC')
   stopifnot(nzchar(script))
+  # cat(c(script, args), '\n', file = stderr())
   run_bash(c(script, args), ...)
 }
 
